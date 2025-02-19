@@ -1,100 +1,12 @@
-use crate::board::square::Square;
-use crate::pieces::{Color, PieceKind};
 use crate::pieces::bishop::Bishop;
 use crate::pieces::king::King;
 use crate::pieces::knight::Knight;
 use crate::pieces::pawn::Pawn;
 use crate::pieces::queen::Queen;
 use crate::pieces::rook::Rook;
+use crate::pieces::PieceKind;
 
-pub const BG_BLACK: u8 = 0;
-pub const BG_WHITE: u8 = 255;
-pub const FG_BLACK: u8 = 235;
-pub const FG_WHITE: u8 = 250;
-const SQUARE_SIZE: usize = 22;
-
-fn goto(row: usize, column: usize) -> String {
-    format!("\u{001b}[{row};{column}H")
-}
-
-fn background(color: u8) -> () {
-    print!("\u{001b}[48;5;{color}m");
-}
-
-fn reset() -> () {
-    print!("\u{001b}[0m")
-}
-
-pub fn draw_square(square: Square, x: usize, y: usize) -> () {
-    let drawing = square.get_drawing();
-    let bg_color: u8 = match square.color() {
-        Color::WHITE => BG_WHITE,
-        Color::BLACK => BG_BLACK,
-    };
-    let piece_color: u8 = match square.piece() {
-        Some(piece) => {
-            match piece.color() {
-                Color::WHITE => FG_WHITE,
-                Color::BLACK => FG_BLACK,
-            }
-        },
-        None => bg_color,
-    };
-
-    for i in 0..SQUARE_SIZE {
-        goto(x+i, y);
-        background(bg_color);
-
-        for j in 0..SQUARE_SIZE {
-            if drawing[i*SQUARE_SIZE+j] == 1 {
-                background(piece_color);
-                print!("  ");
-                background(bg_color);
-            } else {
-                print!("  ");
-            }
-        }
-        reset();
-    }
-}
-
-pub fn draw_piece(piece: &PieceKind, bg_color: u8) -> () {
-    let drawing = piece.get_drawing();
-    let piece_color = match piece.color() {
-        Color::WHITE => FG_WHITE,
-        Color::BLACK => FG_BLACK,
-    };
-
-    for i in 0..SQUARE_SIZE {
-        background(bg_color);
-
-        for j in 0..SQUARE_SIZE {
-            if drawing[i*SQUARE_SIZE+j] == 1 {
-                background(piece_color);
-                print!("  ");
-                background(bg_color);
-            } else {
-                print!("  ");
-            }
-        }
-        reset();
-        println!("");
-    }
-}
-
-pub trait Drawable {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE];
-}
-
-impl Drawable for Square {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
-        match self.piece() {
-            Some(piece) => piece.get_drawing(),
-            None => [0; SQUARE_SIZE*SQUARE_SIZE],
-        }
-    }
-
-}
+use super::{Drawable, SQUARE_SIZE};
 
 impl Drawable for PieceKind {
     fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
