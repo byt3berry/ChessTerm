@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use bishop::Bishop;
 use king::King;
 use knight::Knight;
@@ -5,7 +7,8 @@ use pawn::Pawn;
 use queen::Queen;
 use rook::Rook;
 
-use crate::board::{square::Square, Board, COLUMNS, ROWS};
+use crate::board::position::Position;
+use crate::board::Board;
 
 pub mod bishop;
 pub mod king;
@@ -31,31 +34,27 @@ pub enum PieceKind {
     ROOK(Rook),
 }
 
+pub enum MoveKind {
+    Capture,
+    Castle,
+    EnPassant,
+    Move,
+}
+
+pub struct Move {
+    from: Position,
+    to: Position,
+    move_kind: MoveKind,
+}
+
 pub trait Piece {
-    fn new(index: usize) -> Self;
-    fn move_to(&self, square: Square);
-    fn possible_moves<'a>(&'a self, board: &'a Board, index: usize) -> Vec<&'a Square>;
+    fn new(position: Position, color: Color) -> Self;
+    fn possible_moves(&self, board: &Board, position: &Position) -> HashSet<Move>;
     fn color(&self) -> Color;
+    fn position(&self) -> &Position;
 }
 
 impl PieceKind {
-    pub fn new(index: usize) -> Option<Self> {
-        if index / ROWS == 0 || index / ROWS == ROWS - 1 {
-            match index % COLUMNS {
-               0|7 => Some(Self::ROOK(Rook::new(index))),
-               1|6 => Some(Self::KNIGHT(Knight::new(index))),
-               2|5 => Some(Self::BISHOP(Bishop::new(index))),
-               3   => Some(Self::QUEEN(Queen::new(index))),
-               4   => Some(Self::KING(King::new(index))),
-               _   => panic!("Should never happen: {index}")
-            }
-        } else if index / ROWS == 1 || index / ROWS == ROWS - 2 {
-            Some(PieceKind::PAWN(Pawn::new(index)))
-        } else {
-            None
-        }
-    }
-
     pub fn color(&self) -> Color {
         match self {
             PieceKind::BISHOP(bishop) => bishop.color(),
@@ -64,6 +63,17 @@ impl PieceKind {
             PieceKind::PAWN(pawn) => pawn.color(),
             PieceKind::QUEEN(queen) => queen.color(),
             PieceKind::ROOK(rook) => rook.color(),
+        }
+    }
+
+    pub fn position(&self) -> &Position {
+        match self {
+            PieceKind::BISHOP(bishop) => bishop.position(),
+            PieceKind::KING(king) => king.position(),
+            PieceKind::KNIGHT(knight) => knight.position(),
+            PieceKind::PAWN(pawn) => pawn.position(),
+            PieceKind::QUEEN(queen) => queen.position(),
+            PieceKind::ROOK(rook) => rook.position(),
         }
     }
 }

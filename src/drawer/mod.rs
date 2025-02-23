@@ -1,3 +1,4 @@
+use crate::board::position::Position;
 use crate::board::{Board, COLUMNS, ROWS};
 use crate::board::square::Square;
 use crate::pieces::Color;
@@ -16,20 +17,37 @@ pub trait Drawable {
 }
 
 pub fn draw(board: &Board) -> () {
+    let mut position: Position;
+    clean();
+
     for i in 0..ROWS {
         for j in 0..COLUMNS {
-            let Some(square) = board.get(i, j) else {
+            position = (i, j).into();
+
+            let Some(square) = board.get(&position) else {
                 panic!("The square ({i}, {j}) should exist");
             };
 
-            draw_square(square, i*SQUARE_SIZE, j*SQUARE_SIZE*2);
+            draw_square(square, position);
         }
     }
 }
 
-fn draw_square(square: &Square, x: usize, y: usize) -> () {
+pub fn square_color(row: usize, column:usize) -> Color {
+    assert!(row < ROWS);
+    assert!(column < COLUMNS);
+
+    if row % 2 == 0 && column % 2 == 0 || row % 2 == 1 && column % 2 == 1 {
+        Color::WHITE
+    } else {
+        Color::BLACK
+    }
+}
+
+fn draw_square(square: &Square, position: Position) -> () {
+    let (row, column) = position.into();
     let drawing = square.get_drawing();
-    let bg_color: u8 = match square.color() {
+    let bg_color: u8 = match square_color(row, column) {
         Color::WHITE => SQUARE_WHITE,
         Color::BLACK => SQUARE_BLACK,
     };
@@ -44,7 +62,7 @@ fn draw_square(square: &Square, x: usize, y: usize) -> () {
     };
     
     for i in 0..SQUARE_SIZE {
-        goto(x+i, y);
+        goto(row*SQUARE_SIZE+i, column*SQUARE_SIZE*2);
         background(bg_color);
 
         for j in 0..SQUARE_SIZE {
@@ -66,6 +84,10 @@ fn goto(row: usize, column: usize) -> () {
 
 fn background(color: u8) -> () {
     print!("\u{001b}[48;5;{color}m");
+}
+
+fn clean() {
+    print!("\u{001b}[2J");
 }
 
 fn reset() -> () {

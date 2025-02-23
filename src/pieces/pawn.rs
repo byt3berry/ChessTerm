@@ -1,44 +1,39 @@
-use crate::board::{Board, COLUMNS, ROWS};
-use crate::board::square::Square;
+use std::collections::HashSet;
 
-use super::{Color, Piece};
+use crate::board::Board;
+use crate::board::position::Position;
+use super::{Color, Move, Piece};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Pawn {
     color: Color,
+    position: Position,
     en_passant: bool,
     has_moved: bool,
 }
 
 impl Piece for Pawn {
-    fn new(index: usize) -> Self {
-        let color: Color = if index / ROWS <= 1 {
-            Color::BLACK
-        } else if index / ROWS >= 6 {
-            Color::WHITE
-        } else {
-            panic!("Invalid index: {index}")
-        };
-
+    fn new(position: Position, color: Color) -> Self {
         Self {
             color,
+            position,
             en_passant: false,
             has_moved: false,
         }
     }
 
-    fn move_to(&self, square: Square) {
-        todo!()
-    }
-
-    fn possible_moves<'a>(&'a self, board: &'a Board, index: usize) -> Vec<&'a Square> {
-        // index = row * ROWS + column
-        let row: usize = index / ROWS;
-        let column: usize = index % COLUMNS;
-        todo!()
-    }
-
     fn color(&self) -> Color {
         self.color
+    }
+
+    fn position(&self) -> &Position {
+        &self.position
+    }
+
+    fn possible_moves(&self, board: &Board, position: &Position) -> HashSet<Move> {
+        todo!();
+        // index = row * ROWS + column
+        // let row: usize = index / ROWS;
+        // let column: usize = index % COLUMNS;
     }
 }

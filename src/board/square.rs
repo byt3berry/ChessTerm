@@ -14,6 +14,10 @@ impl Square {
         }
     }
 
+    pub fn set_piece(&mut self, piece: PieceKind) -> () {
+        self.piece = Some(piece);
+    }
+
     pub fn color(&self) -> Color {
         self.color
     }
