@@ -10,7 +10,7 @@ const PIECE_BLACK: u8 = 235;
 const PIECE_WHITE: u8 = 240;
 const SQUARE_BLACK: u8 = 0;
 const SQUARE_WHITE: u8 = 255;
-const SQUARE_SIZE: usize = 22;
+const SQUARE_SIZE: usize = 20;
 
 pub trait Drawable {
     fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE];
