@@ -1,28 +1,27 @@
+use crate::drawer::{Drawable, SQUARE_SIZE};
+use crate::pieces::PieceKind;
 use crate::pieces::bishop::Bishop;
 use crate::pieces::king::King;
 use crate::pieces::knight::Knight;
 use crate::pieces::pawn::Pawn;
 use crate::pieces::queen::Queen;
 use crate::pieces::rook::Rook;
-use crate::pieces::PieceKind;
-
-use super::{Drawable, SQUARE_SIZE};
 
 impl Drawable for PieceKind {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         match self {
-            PieceKind::BISHOP(bishop) => bishop.get_drawing(),
-            PieceKind::KING(king) => king.get_drawing(),
-            PieceKind::KNIGHT(knight) => knight.get_drawing(),
-            PieceKind::PAWN(pawn) => pawn.get_drawing(),
-            PieceKind::QUEEN(queen) => queen.get_drawing(),
-            PieceKind::ROOK(rook) => rook.get_drawing(),
+            Self::BISHOP(bishop) => bishop.drawing(),
+            Self::KING(king) => king.drawing(),
+            Self::KNIGHT(knight) => knight.drawing(),
+            Self::PAWN(pawn) => pawn.drawing(),
+            Self::QUEEN(queen) => queen.drawing(),
+            Self::ROOK(rook) => rook.drawing(),
         }
     }
 }
 
 impl Drawable for Bishop {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         [
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -49,7 +48,7 @@ impl Drawable for Bishop {
 }
 
 impl Drawable for King {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         [
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -76,7 +75,7 @@ impl Drawable for King {
 }
 
 impl Drawable for Knight {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         [
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -103,7 +102,7 @@ impl Drawable for Knight {
 }
 
 impl Drawable for Pawn {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         [
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -130,7 +129,7 @@ impl Drawable for Pawn {
 }
 
 impl Drawable for Queen {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         [
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0,
@@ -157,7 +156,7 @@ impl Drawable for Queen {
 }
 
 impl Drawable for Rook {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         [
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

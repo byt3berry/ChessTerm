@@ -1,8 +1,8 @@
+use crate::board::position::Position;
+use crate::board::square::Square;
+use crate::board::{Board, COLUMNS, ROWS};
 use crate::pieces::{Color, PieceKind};
 use crate::player::Player;
-use super::position::Position;
-use super::square::Square;
-use super::{Board, COLUMNS, ROWS};
 
 pub struct BoardBuilder {
     players: [Player; 2],
@@ -19,10 +19,13 @@ impl BoardBuilder {
 
     pub fn add(mut self, piece: PieceKind) -> Self {
         let position: &Position = piece.position();
-        assert!(position.row() < ROWS);
-        assert!(position.column() < COLUMNS);
+        assert!(position.row() < ROWS, "position {position:?} is invalid");
+        assert!(position.column() < COLUMNS, "position {position:?} is invalid");
 
-        self.board[position.to_index()].set_piece(piece);
+        if let Some(index) = position.to_index() {
+            self.board[index].set_piece(piece);
+        }
+
         self
     }
 

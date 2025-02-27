@@ -1,6 +1,6 @@
 use crate::board::position::Position;
-use crate::board::{Board, COLUMNS, ROWS};
 use crate::board::square::Square;
+use crate::board::{Board, COLUMNS, ROWS};
 use crate::pieces::Color;
 
 mod pieces;
@@ -13,18 +13,19 @@ const SQUARE_WHITE: u8 = 255;
 const SQUARE_SIZE: usize = 20;
 
 pub trait Drawable {
-    fn get_drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE];
+    fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE];
 }
 
-pub fn draw(board: &Board) -> () {
+pub fn draw(board: &Board) {
     let mut position: Position;
     clean();
+    println!();
 
     for i in 0..ROWS {
         for j in 0..COLUMNS {
             position = (i, j).into();
 
-            let Some(square) = board.get(&position) else {
+            let Some(square) = board.square(position) else {
                 panic!("The square ({i}, {j}) should exist");
             };
 
@@ -33,10 +34,11 @@ pub fn draw(board: &Board) -> () {
     }
 }
 
-pub fn square_color(row: usize, column:usize) -> Color {
-    assert!(row < ROWS);
-    assert!(column < COLUMNS);
+pub fn square_color(position: Position) -> Color {
+    assert!(position.row() < ROWS, "position {position:?} is invalid");
+    assert!(position.column() < COLUMNS, "position {position:?} is invalid");
 
+    let (row, column): (usize, usize) = position.into();
     if row % 2 == 0 && column % 2 == 0 || row % 2 == 1 && column % 2 == 1 {
         Color::WHITE
     } else {
@@ -44,23 +46,21 @@ pub fn square_color(row: usize, column:usize) -> Color {
     }
 }
 
-fn draw_square(square: &Square, position: Position) -> () {
-    let (row, column) = position.into();
-    let drawing = square.get_drawing();
-    let bg_color: u8 = match square_color(row, column) {
+fn draw_square(square: &Square, position: Position) {
+    let (row, column): (usize, usize) = position.into();
+    let drawing = square.drawing();
+    let bg_color: u8 = match square_color(position) {
         Color::WHITE => SQUARE_WHITE,
         Color::BLACK => SQUARE_BLACK,
     };
-    let piece_color: u8 = match square.piece() {
-        Some(piece) => {
+    let piece_color: u8 = square
+        .piece()
+        .map_or(bg_color, |piece|
             match piece.color() {
                 Color::WHITE => PIECE_WHITE,
                 Color::BLACK => PIECE_BLACK,
-            }
-        },
-        None => bg_color,
-    };
-    
+            });
+
     for i in 0..SQUARE_SIZE {
         goto(row*SQUARE_SIZE+i, column*SQUARE_SIZE*2);
         background(bg_color);
@@ -78,11 +78,13 @@ fn draw_square(square: &Square, position: Position) -> () {
     }
 }
 
-fn goto(row: usize, column: usize) -> () {
-    print!("\u{001b}[{row};{column}H");
+fn goto(row: usize, column: usize) {
+    // Don't ask why row+1
+    // If i don't put +1, the first row is not printed
+    print!("\u{001b}[{};{}H", row+1, column);
 }
 
-fn background(color: u8) -> () {
+fn background(color: u8) {
     print!("\u{001b}[48;5;{color}m");
 }
 
@@ -90,6 +92,6 @@ fn clean() {
     print!("\u{001b}[2J");
 }
 
-fn reset() -> () {
-    print!("\u{001b}[0m")
+fn reset() {
+    print!("\u{001b}[0m");
 }
