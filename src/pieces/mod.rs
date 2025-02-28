@@ -34,13 +34,13 @@ pub enum PieceKind {
     ROOK(Rook),
 }
 
-#[derive(Debug, Eq, Hash, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum MoveKind {
-    Capture,
+    Attack,
     CastleKingSide,
     CastleQueenSide,
     EnPassant,
-    Move,
+    PawnMove,
     Promotion,
 }
 
@@ -109,5 +109,17 @@ impl Move {
             to,
             kind,
         }
+    }
+
+    pub const fn kind(&self) -> MoveKind {
+        self.kind
+    }
+
+    pub const fn from(&self) -> &Position {
+        &self.from
+    }
+
+    pub const fn to(&self) -> &Position {
+        &self.to
     }
 }

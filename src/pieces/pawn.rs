@@ -66,13 +66,13 @@ impl Piece for Pawn {
         new_position = self.position + direction;
         if let Some(square) = board.square(new_position) {
             if square.piece().is_none() {
-                output.insert(Move::new(self.position, new_position, MoveKind::Move));
+                output.insert(Move::new(self.position, new_position, MoveKind::PawnMove));
 
                 if !self.has_moved {
                     new_position = new_position + direction;
                     if let Some(square) = board.square(new_position) {
                         if square.piece().is_none() {
-                            output.insert(Move::new(self.position, new_position, MoveKind::Move));
+                            output.insert(Move::new(self.position, new_position, MoveKind::PawnMove));
                         }
                     }
                 }
@@ -83,7 +83,7 @@ impl Piece for Pawn {
             new_position = self.position + direction + offset;
             if let Some(piece) = board.piece(new_position) {
                 if piece.color() != self.color {
-                    output.insert(Move::new(self.position, new_position, MoveKind::Capture));
+                    output.insert(Move::new(self.position, new_position, MoveKind::Attack));
                 }
             }
         }
@@ -113,7 +113,7 @@ mod tests {
 
     #[test]
     fn test_simple_moves_not_moved() {
-        let position = (1usize, 3usize).into();
+        let position = (1isize, 3isize).into();
         let color = Color::BLACK;
         let board = BoardBuilder::new()
             .add(PieceKind::PAWN(Pawn::new(position, color)))
@@ -122,8 +122,8 @@ mod tests {
             .piece(position)
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (2usize, 3usize).into(), MoveKind::Move));
-        expected.insert(Move::new(position, (3usize, 3usize).into(), MoveKind::Move));
+        expected.insert(Move::new(position, (2isize, 3isize).into(), MoveKind::PawnMove));
+        expected.insert(Move::new(position, (3isize, 3isize).into(), MoveKind::PawnMove));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -138,7 +138,7 @@ mod tests {
 
     #[test]
     fn test_simple_moves_moved() {
-        let position = (2usize, 3usize).into();
+        let position = (2isize, 3isize).into();
         let color = Color::BLACK;
         let mut pawn: Pawn = Pawn::new(position, color);
         pawn.set_has_moved();
@@ -149,7 +149,7 @@ mod tests {
             .piece(position)
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (3usize, 3usize).into(), MoveKind::Move));
+        expected.insert(Move::new(position, (3isize, 3isize).into(), MoveKind::PawnMove));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -164,7 +164,7 @@ mod tests {
 
     #[test]
     fn test_no_moves() {
-        let position = (1usize, 3usize).into();
+        let position = (1isize, 3isize).into();
         let color = Color::BLACK;
         let board = BoardBuilder::new()
             .add(PieceKind::PAWN(Pawn::new(position, color)))
@@ -188,7 +188,7 @@ mod tests {
 
     #[test]
     fn test_capture() {
-        let position = (3usize, 3usize).into();
+        let position = (3isize, 3isize).into();
         let color = Color::BLACK;
         let board = BoardBuilder::new()
             .add(PieceKind::PAWN(Pawn::new(position, color)))
@@ -200,8 +200,8 @@ mod tests {
             .piece(position)
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (4isize, 2isize).into(), MoveKind::Capture));
-        expected.insert(Move::new(position, (4isize, 4isize).into(), MoveKind::Capture));
+        expected.insert(Move::new(position, (4isize, 2isize).into(), MoveKind::Attack));
+        expected.insert(Move::new(position, (4isize, 4isize).into(), MoveKind::Attack));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -216,7 +216,7 @@ mod tests {
 
     #[test]
     fn test_en_passant() {
-        let position = (4usize, 3usize).into();
+        let position = (4isize, 3isize).into();
         let color = Color::BLACK;
         let mut pawn_left: Pawn = Pawn::new((4isize, 2isize).into(), color.other());
         let mut pawn_right: Pawn = Pawn::new((4isize, 4isize).into(), color.other());

@@ -2,7 +2,8 @@ use crate::board::position::Position;
 use crate::board::square::Square;
 use crate::board::{Board, COLUMNS, ROWS};
 use crate::pieces::{Color, PieceKind};
-use crate::player::Player;
+
+use super::player::Player;
 
 pub struct BoardBuilder {
     players: [Player; 2],

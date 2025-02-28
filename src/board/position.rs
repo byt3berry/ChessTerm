@@ -97,9 +97,9 @@ mod tests {
 
     #[test]
     fn test_position_add_position() {
-        let position1: Position = (2usize, 3usize).into();
-        let position2: Position = (4usize, 5usize).into();
-        let expected: Position = (6usize, 8usize).into();
+        let position1: Position = (2isize, 3isize).into();
+        let position2: Position = (4isize, 5isize).into();
+        let expected: Position = (6isize, 8isize).into();
 
         let position3: Position = position1 + position2;
 
@@ -108,9 +108,9 @@ mod tests {
 
     #[test]
     fn test_position_add_isize() {
-        let position1: Position = (2usize, 3usize).into();
+        let position1: Position = (2isize, 3isize).into();
         let position2: (isize, isize) = (4isize, 5isize);
-        let expected: Position = (6usize, 8usize).into();
+        let expected: Position = (6isize, 8isize).into();
 
         let position3: Position = position1 + position2;
 
@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_position_row_valid() {
-        let position: Position = (2usize, 3usize).into();
+        let position: Position = (2isize, 3isize).into();
         let expected: usize = 2usize;
 
         let row: usize = position.row();
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn test_position_index_valid() {
-        let position: Position = (2usize, 3usize).into();
+        let position: Position = (2isize, 3isize).into();
         let expected: Option<usize> = Some(19usize);
 
         let index: Option<usize> = position.to_index();
@@ -155,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_position_index_invalid() {
-        let position: Position = (10usize, 12usize).into();
+        let position: Position = (10isize, 12isize).into();
         let expected: Option<usize> = None;
 
         let index: Option<usize> = position.to_index();
