@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
-use crate::pieces::{Color, Move, MoveKind};
+use crate::pieces::color::Color;
+use crate::pieces::move_struct::{Move, MoveKind};
 
 use super::position::Position;
 
@@ -35,7 +36,8 @@ impl Player {
 mod tests {
     use std::collections::HashSet;
 
-    use crate::pieces::{Color, Move, MoveKind};
+    use crate::pieces::color::Color;
+    use crate::pieces::move_struct::{Move, MoveKind};
 
     use super::Player;
 

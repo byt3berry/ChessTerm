@@ -2,9 +2,11 @@ use std::collections::HashSet;
 
 use crate::board::Board;
 use crate::board::position::Position;
-use crate::pieces::{Color, Move, Piece};
+use crate::pieces::color::Color;
+use crate::pieces::move_struct::MoveKind;
+use crate::pieces::piece_kind::PieceKind;
+use crate::pieces::{Move, Piece};
 
-use super::{MoveKind, PieceKind};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Pawn {
@@ -107,7 +109,10 @@ mod tests {
 
     use crate::board::board_builder::BoardBuilder;
     use crate::pieces::bishop::Bishop;
-    use crate::pieces::{Color, Move, MoveKind, Piece, PieceKind};
+    use crate::pieces::color::Color;
+    use crate::pieces::move_struct::MoveKind;
+    use crate::pieces::piece_kind::PieceKind;
+    use crate::pieces::{Move, Piece};
 
     use super::Pawn;
 

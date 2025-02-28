@@ -5,13 +5,16 @@ use player::Player;
 use position::Position;
 use square::Square;
 
+use crate::pieces::Piece; 
 use crate::pieces::bishop::Bishop;
+use crate::pieces::color::Color;
 use crate::pieces::king::King;
 use crate::pieces::knight::Knight;
+use crate::pieces::move_struct::Move;
 use crate::pieces::pawn::Pawn;
+use crate::pieces::piece_kind::PieceKind;
 use crate::pieces::queen::Queen;
 use crate::pieces::rook::Rook;
-use crate::pieces::{Color, Move, Piece, PieceKind};
 
 pub mod board_builder;
 pub mod player;
@@ -162,10 +165,13 @@ mod tests {
     use crate::board::board_builder::BoardBuilder;
     use crate::board::position::Position;
     use crate::board::square::Square;
+    use crate::pieces::Piece;
     use crate::pieces::bishop::Bishop;
+    use crate::pieces::color::Color;
+    use crate::pieces::move_struct::{Move, MoveKind};
     use crate::pieces::pawn::Pawn;
+    use crate::pieces::piece_kind::PieceKind;
     use crate::pieces::rook::Rook;
-    use crate::pieces::{Color, Move, MoveKind, Piece, PieceKind};
 
     use super::Board;
 

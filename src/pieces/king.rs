@@ -2,9 +2,12 @@ use std::collections::HashSet;
 
 use crate::board::Board;
 use crate::board::position::Position;
-use crate::pieces::MoveKind;
+use crate::pieces::move_struct::MoveKind;
 use crate::pieces::rook::Rook;
-use crate::pieces::{Color, Move, Piece, PieceKind};
+use crate::pieces::{Move, Piece};
+
+use super::color::Color;
+use super::piece_kind::PieceKind;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct King {
@@ -171,14 +174,17 @@ impl Piece for King {
 mod tests {
     use std::collections::HashSet;
 
+    use crate::board::Board;
     use crate::board::board_builder::BoardBuilder;
     use crate::board::position::Position;
-    use crate::board::Board;
     use crate::pieces::bishop::Bishop;
+    use crate::pieces::color::Color;
+    use crate::pieces::move_struct::MoveKind;
     use crate::pieces::pawn::Pawn;
+    use crate::pieces::piece_kind::PieceKind;
     use crate::pieces::queen::Queen;
     use crate::pieces::rook::Rook;
-    use crate::pieces::{Color, Move, MoveKind, Piece, PieceKind};
+    use crate::pieces::{Move, Piece};
 
     use super::King;
 

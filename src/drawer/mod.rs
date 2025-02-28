@@ -1,7 +1,7 @@
 use crate::board::position::Position;
 use crate::board::square::Square;
 use crate::board::{Board, COLUMNS, ROWS};
-use crate::pieces::Color;
+use crate::pieces::color::Color;
 
 mod pieces;
 mod square;

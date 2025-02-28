@@ -1,7 +1,8 @@
 use crate::board::position::Position;
 use crate::board::square::Square;
 use crate::board::{Board, COLUMNS, ROWS};
-use crate::pieces::{Color, PieceKind};
+use crate::pieces::color::Color;
+use crate::pieces::piece_kind::PieceKind;
 
 use super::player::Player;
 

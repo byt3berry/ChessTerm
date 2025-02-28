@@ -2,8 +2,10 @@ use std::collections::HashSet;
 
 use crate::board::Board;
 use crate::board::position::Position;
-use crate::pieces::MoveKind;
-use crate::pieces::{Color, Move, Piece};
+use crate::pieces::move_struct::MoveKind;
+use crate::pieces::{Move, Piece};
+
+use super::color::Color;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Rook {
@@ -76,11 +78,14 @@ impl Piece for Rook {
 mod tests {
     use std::collections::HashSet;
 
+    use crate::board::Board;
     use crate::board::board_builder::BoardBuilder;
     use crate::board::position::Position;
-    use crate::board::Board;
+    use crate::pieces::color::Color;
+    use crate::pieces::move_struct::MoveKind;
     use crate::pieces::pawn::Pawn;
-    use crate::pieces::{Color, Move, MoveKind, Piece, PieceKind};
+    use crate::pieces::piece_kind::PieceKind;
+    use crate::pieces::{Move, Piece};
 
     use super::Rook;
 

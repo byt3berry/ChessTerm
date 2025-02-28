@@ -1,9 +1,9 @@
 use crate::drawer::{Drawable, SQUARE_SIZE};
-use crate::pieces::PieceKind;
 use crate::pieces::bishop::Bishop;
 use crate::pieces::king::King;
 use crate::pieces::knight::Knight;
 use crate::pieces::pawn::Pawn;
+use crate::pieces::piece_kind::PieceKind;
 use crate::pieces::queen::Queen;
 use crate::pieces::rook::Rook;
 
