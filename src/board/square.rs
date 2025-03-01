@@ -19,6 +19,14 @@ impl Square {
         self.piece = Some(piece);
     }
 
+    pub const fn piece_unset(&mut self) -> PieceKind {
+        assert!(self.piece.is_some());
+
+        let piece: PieceKind = self.piece.unwrap();
+        self.piece = None;
+        piece
+    }
+
     pub const fn color(&self) -> Color {
         self.color
     }

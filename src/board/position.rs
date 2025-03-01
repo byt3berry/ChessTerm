@@ -30,6 +30,10 @@ impl Position {
 
         self.column as usize
     }
+
+    pub fn is_valid(&self) -> bool {
+        self.row() < ROWS && self.column() < COLUMNS
+    }
 }
 
 impl From<(usize, usize)> for Position {
@@ -67,14 +71,6 @@ impl Add<Self> for Position {
     }
 }
 
-impl Add<Self> for &Position {
-    type Output = Position;
-
-    fn add(self, value: Self) -> Self::Output {
-        (self.row + value.row, self.column + value.column).into()
-    }
-}
-
 impl Add<(isize, isize)> for Position {
     type Output = Self;
 
@@ -83,16 +79,9 @@ impl Add<(isize, isize)> for Position {
     }
 }
 
-impl Add<(isize, isize)> for &Position {
-    type Output = Position;
-
-    fn add(self, value: (isize, isize)) -> Self::Output {
-        (self.row + value.0, self.column + value.1).into()
-    }
-}
-
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
     use super::Position;
 
     #[test]

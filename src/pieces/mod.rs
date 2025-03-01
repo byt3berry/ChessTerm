@@ -20,5 +20,6 @@ pub trait Piece {
     fn new(position: Position, color: Color) -> Self;
     fn possible_moves(&self, board: &Board) -> HashSet<Move>;
     fn color(&self) -> Color;
-    fn position(&self) -> &Position;
+    fn position(&self) -> Position;
+    fn set_position(&mut self, position: Position);
 }

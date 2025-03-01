@@ -52,8 +52,12 @@ impl Piece for Pawn {
         self.color
     }
 
-    fn position(&self) -> &Position {
-        &self.position
+    fn position(&self) -> Position {
+        self.position
+    }
+
+    fn set_position(&mut self, position: Position) {
+        self.position = position;
     }
 
     fn possible_moves(&self, board: &Board) -> HashSet<Move> {
@@ -94,7 +98,7 @@ impl Piece for Pawn {
             new_position = self.position + offset;
             if let Some(PieceKind::PAWN(pawn)) = board.piece(new_position) {
                 if pawn.en_passant_possible {
-                    output.insert(Move::new(self.position, new_position + direction, MoveKind::EnPassant));
+                    output.insert(Move::new(self.position, new_position + direction, MoveKind::EnPassant(new_position)));
                 }
             }
         }
@@ -105,6 +109,7 @@ impl Piece for Pawn {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
     use crate::board::board_builder::BoardBuilder;
@@ -118,17 +123,15 @@ mod tests {
 
     #[test]
     fn test_simple_moves_not_moved() {
-        let position = (1isize, 3isize).into();
-        let color = Color::BLACK;
         let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new(position, color)))
+            .add(PieceKind::PAWN(Pawn::new((1isize, 3isize).into(), Color::BLACK)))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((1isize, 3isize).into())
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (2isize, 3isize).into(), MoveKind::PawnMove));
-        expected.insert(Move::new(position, (3isize, 3isize).into(), MoveKind::PawnMove));
+        expected.insert(Move::new((1isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::PawnMove));
+        expected.insert(Move::new((1isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -143,18 +146,16 @@ mod tests {
 
     #[test]
     fn test_simple_moves_moved() {
-        let position = (2isize, 3isize).into();
-        let color = Color::BLACK;
-        let mut pawn: Pawn = Pawn::new(position, color);
+        let mut pawn: Pawn = Pawn::new((2isize, 3isize).into(), Color::BLACK);
         pawn.set_has_moved();
         let board = BoardBuilder::new()
             .add(PieceKind::PAWN(pawn))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((2isize, 3isize).into())
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (3isize, 3isize).into(), MoveKind::PawnMove));
+        expected.insert(Move::new((2isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -169,14 +170,12 @@ mod tests {
 
     #[test]
     fn test_no_moves() {
-        let position = (1isize, 3isize).into();
-        let color = Color::BLACK;
         let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new(position, color)))
-            .add(PieceKind::BISHOP(Bishop::new((2isize, 3isize).into(), color)))
+            .add(PieceKind::PAWN(Pawn::new((1isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::BISHOP(Bishop::new((2isize, 3isize).into(), Color::BLACK)))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((1isize, 3isize).into())
             .expect("The piece {position} should exist");
         let expected: HashSet<Move> = HashSet::new();
 
@@ -193,20 +192,18 @@ mod tests {
 
     #[test]
     fn test_capture() {
-        let position = (3isize, 3isize).into();
-        let color = Color::BLACK;
         let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new(position, color)))
-            .add(PieceKind::BISHOP(Bishop::new((4isize, 2isize).into(), color.other())))
-            .add(PieceKind::BISHOP(Bishop::new((4isize, 3isize).into(), color)))
-            .add(PieceKind::BISHOP(Bishop::new((4isize, 4isize).into(), color.other())))
+            .add(PieceKind::PAWN(Pawn::new((3isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::BISHOP(Bishop::new((4isize, 2isize).into(), Color::WHITE)))
+            .add(PieceKind::BISHOP(Bishop::new((4isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::BISHOP(Bishop::new((4isize, 4isize).into(), Color::WHITE)))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((3isize, 3isize).into())
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (4isize, 2isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (4isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 2isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 4isize).into(), MoveKind::Attack));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -221,24 +218,22 @@ mod tests {
 
     #[test]
     fn test_en_passant() {
-        let position = (4isize, 3isize).into();
-        let color = Color::BLACK;
-        let mut pawn_left: Pawn = Pawn::new((4isize, 2isize).into(), color.other());
-        let mut pawn_right: Pawn = Pawn::new((4isize, 4isize).into(), color.other());
+        let mut pawn_left: Pawn = Pawn::new((4isize, 2isize).into(), Color::WHITE);
+        let mut pawn_right: Pawn = Pawn::new((4isize, 4isize).into(), Color::WHITE);
         pawn_left.set_en_passant_possible();
         pawn_right.set_en_passant_possible();
         let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new(position, color)))
-            .add(PieceKind::BISHOP(Bishop::new((5isize, 3isize).into(), color)))
+            .add(PieceKind::PAWN(Pawn::new((4isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::BISHOP(Bishop::new((5isize, 3isize).into(), Color::BLACK)))
             .add(PieceKind::PAWN(pawn_left))
             .add(PieceKind::PAWN(pawn_right))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((4isize, 3isize).into())
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (5isize, 2isize).into(), MoveKind::EnPassant));
-        expected.insert(Move::new(position, (5isize, 4isize).into(), MoveKind::EnPassant));
+        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 2isize).into(), MoveKind::EnPassant((4isize, 2isize).into())));
+        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 4isize).into(), MoveKind::EnPassant((4isize, 4isize).into())));
 
         let possible_moves = piece.possible_moves(&board);
 

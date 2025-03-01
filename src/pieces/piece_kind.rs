@@ -34,7 +34,7 @@ impl PieceKind {
         }
     }
 
-    pub fn position(&self) -> &Position {
+    pub fn position(&self) -> Position {
         match self {
             Self::BISHOP(bishop) => bishop.position(),
             Self::KING(king) => king.position(),
@@ -42,6 +42,17 @@ impl PieceKind {
             Self::PAWN(pawn) => pawn.position(),
             Self::QUEEN(queen) => queen.position(),
             Self::ROOK(rook) => rook.position(),
+        }
+    }
+
+    pub fn set_position(&mut self, position: Position) {
+        match self {
+            Self::BISHOP(bishop) => bishop.set_position(position),
+            Self::KING(king) => king.set_position(position),
+            Self::KNIGHT(knight) => knight.set_position(position),
+            Self::PAWN(pawn) => pawn.set_position(position),
+            Self::QUEEN(queen) => queen.set_position(position),
+            Self::ROOK(rook) => rook.set_position(position),
         }
     }
 

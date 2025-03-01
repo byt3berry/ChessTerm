@@ -22,6 +22,14 @@ impl Rook {
     pub const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
+
+    pub fn queen_side_castling_final_position(&self) -> Position {
+        (self.position.row(), 3usize).into()
+    }
+
+    pub fn king_side_castling_final_position(&self) -> Position {
+        (self.position.row(), 5usize).into()
+    }
 }
 
 impl Piece for Rook {
@@ -37,8 +45,12 @@ impl Piece for Rook {
         self.color
     }
 
-    fn position(&self) -> &Position {
-        &self.position
+    fn position(&self) -> Position {
+        self.position
+    }
+
+    fn set_position(&mut self, position: Position) {
+        self.position = position;
     }
 
     fn possible_moves(&self, board: &Board) -> HashSet<Move> {
@@ -76,11 +88,11 @@ impl Piece for Rook {
 
 #[cfg(test)]
 mod tests {
+    use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
     use crate::board::Board;
     use crate::board::board_builder::BoardBuilder;
-    use crate::board::position::Position;
     use crate::pieces::color::Color;
     use crate::pieces::move_struct::MoveKind;
     use crate::pieces::pawn::Pawn;
@@ -91,29 +103,27 @@ mod tests {
 
     #[test]
     fn test_simple_moves() {
-        let position: Position = (3isize, 3isize).into();
-        let color: Color = Color::BLACK;
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::ROOK(Rook::new(position, color)))
+            .add(PieceKind::ROOK(Rook::new((3isize, 3isize).into(), Color::BLACK)))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((3isize, 3isize).into())
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (0isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (1isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (2isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 0isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 1isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 2isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 4isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 5isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 6isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 7isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (4isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (5isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (6isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (7isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (0isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (1isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 0isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 1isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 2isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 5isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 6isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 7isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (5isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (6isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (7isize, 3isize).into(), MoveKind::Attack));
 
         let possible_moves: HashSet<Move> = piece.possible_moves(&board);
 
@@ -128,17 +138,15 @@ mod tests {
 
     #[test]
     fn test_no_moves() {
-        let position: Position = (3isize, 3isize).into();
-        let color: Color = Color::BLACK;
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::ROOK(Rook::new(position, color)))
-            .add(PieceKind::PAWN(Pawn::new((2isize, 3isize).into(), color)))
-            .add(PieceKind::PAWN(Pawn::new((3isize, 2isize).into(), color)))
-            .add(PieceKind::PAWN(Pawn::new((3isize, 4isize).into(), color)))
-            .add(PieceKind::PAWN(Pawn::new((4isize, 3isize).into(), color)))
+            .add(PieceKind::ROOK(Rook::new((3isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::PAWN(Pawn::new((2isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::PAWN(Pawn::new((3isize, 2isize).into(), Color::BLACK)))
+            .add(PieceKind::PAWN(Pawn::new((3isize, 4isize).into(), Color::BLACK)))
+            .add(PieceKind::PAWN(Pawn::new((4isize, 3isize).into(), Color::BLACK)))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((3isize, 3isize).into())
             .expect("The piece {position} should exist");
         let expected: HashSet<Move> = HashSet::new();
 
@@ -155,23 +163,21 @@ mod tests {
 
     #[test]
     fn test_capture() {
-        let position: Position = (3isize, 3isize).into();
-        let color: Color = Color::BLACK;
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::ROOK(Rook::new(position, color)))
-            .add(PieceKind::PAWN(Pawn::new((2isize, 3isize).into(), color.other())))
-            .add(PieceKind::PAWN(Pawn::new((3isize, 2isize).into(), color.other())))
-            .add(PieceKind::PAWN(Pawn::new((3isize, 4isize).into(), color.other())))
-            .add(PieceKind::PAWN(Pawn::new((4isize, 3isize).into(), color.other())))
+            .add(PieceKind::ROOK(Rook::new((3isize, 3isize).into(), Color::BLACK)))
+            .add(PieceKind::PAWN(Pawn::new((2isize, 3isize).into(), Color::WHITE)))
+            .add(PieceKind::PAWN(Pawn::new((3isize, 2isize).into(), Color::WHITE)))
+            .add(PieceKind::PAWN(Pawn::new((3isize, 4isize).into(), Color::WHITE)))
+            .add(PieceKind::PAWN(Pawn::new((4isize, 3isize).into(), Color::WHITE)))
             .build();
         let piece: &PieceKind = board
-            .piece(position)
+            .piece((3isize, 3isize).into())
             .expect("The piece {position} should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new(position, (2isize, 3isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 2isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (3isize, 4isize).into(), MoveKind::Attack));
-        expected.insert(Move::new(position, (4isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 2isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::Attack));
 
         let possible_moves: HashSet<Move> = piece.possible_moves(&board);
 

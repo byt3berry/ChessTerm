@@ -5,7 +5,7 @@ use crate::pieces::move_struct::{Move, MoveKind};
 
 use super::position::Position;
 
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Player {
     color: Color,
     attacking: HashSet<Move>,
@@ -27,7 +27,7 @@ impl Player {
         &self.attacking
     }
 
-    pub fn is_attacking(&self, position: &Position) -> bool {
+    pub fn is_attacking(&self, position: Position) -> bool {
         self.attacking.iter().any(|m| m.kind() == MoveKind::Attack && m.to() == position)
     }
 }
@@ -50,8 +50,8 @@ mod tests {
         attacking.insert(Move::new((7isize, 0isize).into(), (7isize, 7isize).into(), MoveKind::Attack));
         player.set_attacking(attacking);
 
-        assert!(player.is_attacking(&(5isize, 3isize).into()));
-        assert!(player.is_attacking(&(4isize, 4isize).into()));
-        assert!(player.is_attacking(&(7isize, 7isize).into()));
+        assert!(player.is_attacking((5isize, 3isize).into()));
+        assert!(player.is_attacking((4isize, 4isize).into()));
+        assert!(player.is_attacking((7isize, 7isize).into()));
     }
 }

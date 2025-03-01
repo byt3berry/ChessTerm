@@ -20,7 +20,7 @@ impl BoardBuilder {
     }
 
     pub fn add(mut self, piece: PieceKind) -> Self {
-        let position: &Position = piece.position();
+        let position: Position = piece.position();
         assert!(position.row() < ROWS, "position {position:?} is invalid");
         assert!(position.column() < COLUMNS, "position {position:?} is invalid");
 
