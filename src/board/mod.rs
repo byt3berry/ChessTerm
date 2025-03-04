@@ -265,6 +265,30 @@ impl Board {
 
         simulated_board
     }
+
+    fn king(&self, color: Color) -> Option<Position> {
+        for index in 0..ROWS*COLUMNS {
+            if let Some(PieceKind::KING(king)) = self.piece_from_index(index) {
+                if king.color() == color {
+                    return Some(king.position());
+                }
+            }
+        }
+
+        None
+    }
+
+    pub fn checked(&self, color: Color) -> bool {
+        if let Some(position) = self.king(color) {
+            self
+                .player(color.other())
+                .attacking()
+                .iter()
+                .any(|m| m.to() == position)
+        } else {
+            false
+        }
+    }
 }
 
 #[cfg(test)]
@@ -581,5 +605,27 @@ mod tests {
             .build();
 
         assert_eq!(expected, board);
+    }
+
+    #[test]
+    fn test_checked() {
+        let mut board: Board = BoardBuilder::new()
+            .add(PieceKind::KING(King::new((0isize, 4isize).into(), Color::BLACK)))
+            .add(PieceKind::ROOK(Rook::new((5isize, 4isize).into(), Color::WHITE)))
+            .build();
+        board.set_attacking(Color::WHITE);
+
+        assert!(board.checked(Color::BLACK));
+    }
+
+    #[test]
+    fn test_not_checked() {
+        let mut board: Board = BoardBuilder::new()
+            .add(PieceKind::KING(King::new((0isize, 4isize).into(), Color::BLACK)))
+            .add(PieceKind::ROOK(Rook::new((5isize, 5isize).into(), Color::WHITE)))
+            .build();
+        board.set_attacking(Color::WHITE);
+
+        assert!(!board.checked(Color::BLACK));
     }
 }
