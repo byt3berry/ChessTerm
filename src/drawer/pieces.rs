@@ -1,4 +1,3 @@
-use crate::drawer::{Drawable, SQUARE_SIZE};
 use crate::pieces::bishop::Bishop;
 use crate::pieces::king::King;
 use crate::pieces::knight::Knight;
@@ -7,15 +6,17 @@ use crate::pieces::piece_kind::PieceKind;
 use crate::pieces::queen::Queen;
 use crate::pieces::rook::Rook;
 
+use super::{Drawable, SQUARE_SIZE};
+
 impl Drawable for PieceKind {
     fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE] {
         match self {
-            Self::BISHOP(bishop) => bishop.drawing(),
-            Self::KING(king) => king.drawing(),
-            Self::KNIGHT(knight) => knight.drawing(),
-            Self::PAWN(pawn) => pawn.drawing(),
-            Self::QUEEN(queen) => queen.drawing(),
-            Self::ROOK(rook) => rook.drawing(),
+            Self::Bishop(bishop) => bishop.drawing(),
+            Self::King(king) => king.drawing(),
+            Self::Knight(knight) => knight.drawing(),
+            Self::Pawn(pawn) => pawn.drawing(),
+            Self::Queen(queen) => queen.drawing(),
+            Self::Rook(rook) => rook.drawing(),
         }
     }
 }

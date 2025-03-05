@@ -1,10 +1,10 @@
-use crate::board::position::Position;
-use crate::board::square::Square;
-use crate::board::{Board, COLUMNS, ROWS};
-use crate::pieces::color::Color;
 use crate::pieces::piece_kind::PieceKind;
 
+use super::color::Color;
 use super::player::Player;
+use super::position::Position;
+use super::square::Square;
+use super::{Board, COLUMNS, ROWS};
 
 pub struct BoardBuilder {
     players: [Player; 2],
@@ -14,7 +14,7 @@ pub struct BoardBuilder {
 impl BoardBuilder {
     pub fn new() -> Self {
         Self {
-            players: [Player::new(Color::WHITE), Player::new(Color::BLACK)],
+            players: [Player::new(Color::White), Player::new(Color::Black)],
             board: [Square::default(); ROWS*COLUMNS],
         }
     }

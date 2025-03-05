@@ -1,7 +1,7 @@
+use crate::board::color::Color;
 use crate::board::position::Position;
 use crate::board::square::Square;
 use crate::board::{Board, COLUMNS, ROWS};
-use crate::pieces::color::Color;
 
 mod pieces;
 mod square;
@@ -40,9 +40,9 @@ pub fn square_color(position: Position) -> Color {
 
     let (row, column): (usize, usize) = position.into();
     if row % 2 == 0 && column % 2 == 0 || row % 2 == 1 && column % 2 == 1 {
-        Color::WHITE
+        Color::White
     } else {
-        Color::BLACK
+        Color::Black
     }
 }
 
@@ -50,15 +50,15 @@ fn draw_square(square: &Square, position: Position) {
     let (row, column): (usize, usize) = position.into();
     let drawing = square.drawing();
     let bg_color: u8 = match square_color(position) {
-        Color::WHITE => SQUARE_WHITE,
-        Color::BLACK => SQUARE_BLACK,
+        Color::White => SQUARE_WHITE,
+        Color::Black => SQUARE_BLACK,
     };
     let piece_color: u8 = square
         .piece()
         .map_or(bg_color, |piece|
             match piece.color() {
-                Color::WHITE => PIECE_WHITE,
-                Color::BLACK => PIECE_BLACK,
+                Color::White => PIECE_WHITE,
+                Color::Black => PIECE_BLACK,
             });
 
     for i in 0..SQUARE_SIZE {

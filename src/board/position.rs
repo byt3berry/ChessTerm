@@ -1,6 +1,6 @@
 use std::ops::Add;
 
-use crate::board::{ROWS, COLUMNS};
+use super::{ROWS, COLUMNS};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Position {
@@ -82,6 +82,7 @@ impl Add<(isize, isize)> for Position {
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
+
     use super::Position;
 
     #[test]

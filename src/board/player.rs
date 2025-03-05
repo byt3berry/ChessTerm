@@ -1,8 +1,7 @@
 use std::collections::HashSet;
 
-use crate::pieces::color::Color;
-use crate::pieces::move_struct::{Move, MoveKind};
-
+use super::color::Color;
+use super::move_struct::{Move, MoveKind};
 use super::position::Position;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -36,18 +35,18 @@ impl Player {
 mod tests {
     use std::collections::HashSet;
 
-    use crate::pieces::color::Color;
-    use crate::pieces::move_struct::{Move, MoveKind};
+    use crate::board::color::Color;
+    use crate::board::move_struct::{Move, MoveKind};
 
     use super::Player;
 
     #[test]
     fn test_is_attacking() {
-        let mut player: Player = Player::new(Color::BLACK);
+        let mut player: Player = Player::new(Color::Black);
         let mut attacking: HashSet<Move> = HashSet::new();
-        attacking.insert(Move::new((1isize, 4isize).into(), (5isize, 3isize).into(), MoveKind::Attack));
-        attacking.insert(Move::new((4isize, 6isize).into(), (4isize, 4isize).into(), MoveKind::Attack));
-        attacking.insert(Move::new((7isize, 0isize).into(), (7isize, 7isize).into(), MoveKind::Attack));
+        attacking.insert(Move::new((1isize, 4isize).into(), (5isize, 3isize).into(), MoveKind::Attack, None));
+        attacking.insert(Move::new((4isize, 6isize).into(), (4isize, 4isize).into(), MoveKind::Attack, None));
+        attacking.insert(Move::new((7isize, 0isize).into(), (7isize, 7isize).into(), MoveKind::Attack, None));
         player.set_attacking(attacking);
 
         assert!(player.is_attacking((5isize, 3isize).into()));

@@ -1,12 +1,14 @@
 use crate::board::position::Position;
 
+use super::pin_kind::PinKind;
+
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub enum MoveKind {
-    Attack,
+    Attack, // A move that can take a piece
     CastleKingSide,
     CastleQueenSide,
     EnPassant(Position),
-    PawnMove,
+    PawnMove, // A pawn move that can not take a piece (vertical pawn move)
     Promotion,
 }
 
@@ -15,10 +17,11 @@ pub struct Move {
     from: Position,
     to: Position,
     kind: MoveKind,
+    pin: Option<PinKind>,
 }
 
 impl Move {
-    pub fn new(from: Position, to: Position, kind: MoveKind) -> Self {
+    pub fn new(from: Position, to: Position, kind: MoveKind, pin: Option<PinKind>) -> Self {
         assert_ne!(to, from);
         assert!(from.is_valid());
         assert!(to.is_valid());
@@ -27,6 +30,7 @@ impl Move {
             from,
             to,
             kind,
+            pin,
         }
     }
 
@@ -41,12 +45,17 @@ impl Move {
     pub const fn to(&self) -> Position {
         self.to
     }
+
+    pub const fn pin(&self) -> Option<PinKind> {
+        self.pin
+    }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::board::move_struct::MoveKind;
+    use crate::board::pin_kind::PinKind;
     use crate::board::position::Position;
-    use crate::pieces::move_struct::MoveKind;
 
     use super::Move;
 
@@ -56,8 +65,9 @@ mod tests {
         let from: Position = (3isize, 3isize).into();
         let to: Position = (3isize, 3isize).into();
         let kind: MoveKind = MoveKind::Attack;
+        let pin: Option<PinKind> = None;
 
-        Move::new(from, to, kind);
+        Move::new(from, to, kind, pin);
     }
 
     #[test]
@@ -65,8 +75,9 @@ mod tests {
         let from: Position = (3isize, 3isize).into();
         let to: Position = (7isize, 4isize).into();
         let kind: MoveKind = MoveKind::Attack;
+        let pin: Option<PinKind> = None;
 
-        Move::new(from, to, kind);
+        Move::new(from, to, kind, pin);
     }
 
     #[test]
@@ -75,7 +86,8 @@ mod tests {
         let from: Position = (54isize, 65isize).into();
         let to: Position = (54isize, 66isize).into();
         let kind: MoveKind = MoveKind::Attack;
+        let pin: Option<PinKind> = None;
 
-        Move::new(from, to, kind);
+        Move::new(from, to, kind, pin);
     }
 }

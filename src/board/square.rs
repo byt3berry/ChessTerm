@@ -1,5 +1,6 @@
-use crate::pieces::color::Color;
 use crate::pieces::piece_kind::PieceKind;
+
+use super::color::Color;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub struct Square {

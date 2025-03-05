@@ -1,12 +1,16 @@
 use std::collections::HashSet;
 
 use crate::board::Board;
+use crate::board::color::Color;
+use crate::board::move_struct::{MoveKind, Move};
 use crate::board::position::Position;
-use crate::pieces::color::Color;
-use crate::pieces::move_struct::MoveKind;
-use crate::pieces::piece_kind::PieceKind;
-use crate::pieces::{Move, Piece};
 
+use super::Piece;
+use super::piece_kind::PieceKind;
+
+fn add_offsets(offset1: (isize, isize), offset2: (isize, isize)) -> (isize, isize) {
+    (offset1.0+ offset2.0, offset1.1 + offset2.1)
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub struct Pawn {
@@ -31,8 +35,8 @@ impl Pawn {
 
     pub const fn direction(&self) -> (isize, isize) {
         match self.color {
-            Color::WHITE => (-1isize, 0isize),
-            Color::BLACK => (1isize, 0isize),
+            Color::White => (-1isize, 0isize),
+            Color::Black => (1isize, 0isize),
         }
     }
 }
@@ -65,40 +69,61 @@ impl Piece for Pawn {
             (0isize, -1isize),
             (0isize, 1isize),
         ];
-        let mut output: HashSet<Move> = HashSet::new();
+        let mut to: Position;
         let direction: (isize, isize) = self.direction();
-        let mut new_position: Position;
+        let mut output: HashSet<Move> = HashSet::new();
 
-        new_position = self.position + direction;
-        if let Some(square) = board.square(new_position) {
-            if square.piece().is_none() {
-                output.insert(Move::new(self.position, new_position, MoveKind::PawnMove));
+        // Simple moves
+        if self.pinned_but_movable(board, direction.into()) {
+            to = self.position + direction;
+            if let Some(square) = board.square(to) {
+                if square.piece().is_none() {
+                    output.insert(Move::new(self.position, to, MoveKind::PawnMove, None));
 
-                if !self.has_moved {
-                    new_position = new_position + direction;
-                    if let Some(square) = board.square(new_position) {
-                        if square.piece().is_none() {
-                            output.insert(Move::new(self.position, new_position, MoveKind::PawnMove));
+                    if !self.has_moved {
+                        to = to + direction;
+                        if let Some(square) = board.square(to) {
+                            if square.piece().is_none() {
+                                output.insert(Move::new(self.position, to, MoveKind::PawnMove, None));
+                            }
                         }
                     }
                 }
             }
         }
 
+        // Attack
+        let mut new_offset: (isize, isize);
         for offset in OFFSETS {
-            new_position = self.position + direction + offset;
-            if let Some(piece) = board.piece(new_position) {
+            new_offset = add_offsets(direction, offset);
+
+            if !self.pinned_but_movable(board, new_offset.into()) {
+                continue;
+            }
+
+            to = self.position + new_offset;
+            if let Some(piece) = board.piece(to) {
                 if piece.color() != self.color {
-                    output.insert(Move::new(self.position, new_position, MoveKind::Attack));
+                    output.insert(Move::new(self.position, to, MoveKind::Attack, None));
                 }
             }
         }
 
+        // En passant
+        let mut pawn_position: Position;
         for offset in OFFSETS {
-            new_position = self.position + offset;
-            if let Some(PieceKind::PAWN(pawn)) = board.piece(new_position) {
+            new_offset = add_offsets(offset, direction);
+
+            if !self.pinned_but_movable(board, new_offset.into()) {
+                continue;
+            }
+
+            pawn_position = self.position + offset;
+            to = self.position + new_offset;
+
+            if let Some(PieceKind::Pawn(pawn)) = board.piece(pawn_position) {
                 if pawn.en_passant_possible {
-                    output.insert(Move::new(self.position, new_position + direction, MoveKind::EnPassant(new_position)));
+                    output.insert(Move::new(self.position, to, MoveKind::EnPassant(pawn_position), None));
                 }
             }
         }
@@ -112,26 +137,29 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
+    use crate::board::Board;
     use crate::board::board_builder::BoardBuilder;
+    use crate::board::color::Color;
+    use crate::board::move_struct::{Move, MoveKind};
+    use crate::pieces::Piece;
     use crate::pieces::bishop::Bishop;
-    use crate::pieces::color::Color;
-    use crate::pieces::move_struct::MoveKind;
+    use crate::pieces::king::King;
     use crate::pieces::piece_kind::PieceKind;
-    use crate::pieces::{Move, Piece};
+    use crate::pieces::rook::Rook;
 
     use super::Pawn;
 
     #[test]
     fn test_simple_moves_not_moved() {
-        let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new((1isize, 3isize).into(), Color::BLACK)))
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((1isize, 3isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((1isize, 3isize).into())
-            .expect("The piece {position} should exist");
+            .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((1isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::PawnMove));
-        expected.insert(Move::new((1isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove));
+        expected.insert(Move::new((1isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::PawnMove, None));
+        expected.insert(Move::new((1isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove, None));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -141,21 +169,21 @@ mod tests {
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
             expected.difference(&possible_moves),
             possible_moves.difference(&expected),
-            );
+        );
     }
 
     #[test]
     fn test_simple_moves_moved() {
-        let mut pawn: Pawn = Pawn::new((2isize, 3isize).into(), Color::BLACK);
+        let mut pawn: Pawn = Pawn::new((2isize, 3isize).into(), Color::Black);
         pawn.set_has_moved();
-        let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(pawn))
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(pawn))
             .build();
         let piece: &PieceKind = board
             .piece((2isize, 3isize).into())
-            .expect("The piece {position} should exist");
+            .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((2isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove));
+        expected.insert(Move::new((2isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove, None));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -165,18 +193,18 @@ mod tests {
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
             expected.difference(&possible_moves),
             possible_moves.difference(&expected),
-            );
+        );
     }
 
     #[test]
     fn test_no_moves() {
-        let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new((1isize, 3isize).into(), Color::BLACK)))
-            .add(PieceKind::BISHOP(Bishop::new((2isize, 3isize).into(), Color::BLACK)))
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((1isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((2isize, 3isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((1isize, 3isize).into())
-            .expect("The piece {position} should exist");
+            .expect("The piece should exist");
         let expected: HashSet<Move> = HashSet::new();
 
         let possible_moves = piece.possible_moves(&board);
@@ -187,23 +215,23 @@ mod tests {
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
             expected.difference(&possible_moves),
             possible_moves.difference(&expected),
-            );
+        );
     }
 
     #[test]
     fn test_capture() {
-        let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new((3isize, 3isize).into(), Color::BLACK)))
-            .add(PieceKind::BISHOP(Bishop::new((4isize, 2isize).into(), Color::WHITE)))
-            .add(PieceKind::BISHOP(Bishop::new((4isize, 3isize).into(), Color::BLACK)))
-            .add(PieceKind::BISHOP(Bishop::new((4isize, 4isize).into(), Color::WHITE)))
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((4isize, 2isize).into(), Color::White)))
+            .add(PieceKind::Bishop(Bishop::new((4isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((4isize, 4isize).into(), Color::White)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into())
-            .expect("The piece {position} should exist");
+            .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 2isize).into(), MoveKind::Attack));
-        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 2isize).into(), MoveKind::Attack, None));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 4isize).into(), MoveKind::Attack, None));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -213,27 +241,27 @@ mod tests {
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
             expected.difference(&possible_moves),
             possible_moves.difference(&expected),
-            );
+        );
     }
 
     #[test]
     fn test_en_passant() {
-        let mut pawn_left: Pawn = Pawn::new((4isize, 2isize).into(), Color::WHITE);
-        let mut pawn_right: Pawn = Pawn::new((4isize, 4isize).into(), Color::WHITE);
+        let mut pawn_left: Pawn = Pawn::new((4isize, 2isize).into(), Color::White);
+        let mut pawn_right: Pawn = Pawn::new((4isize, 4isize).into(), Color::White);
         pawn_left.set_en_passant_possible();
         pawn_right.set_en_passant_possible();
-        let board = BoardBuilder::new()
-            .add(PieceKind::PAWN(Pawn::new((4isize, 3isize).into(), Color::BLACK)))
-            .add(PieceKind::BISHOP(Bishop::new((5isize, 3isize).into(), Color::BLACK)))
-            .add(PieceKind::PAWN(pawn_left))
-            .add(PieceKind::PAWN(pawn_right))
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((5isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Pawn(pawn_left))
+            .add(PieceKind::Pawn(pawn_right))
             .build();
         let piece: &PieceKind = board
             .piece((4isize, 3isize).into())
-            .expect("The piece {position} should exist");
+            .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 2isize).into(), MoveKind::EnPassant((4isize, 2isize).into())));
-        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 4isize).into(), MoveKind::EnPassant((4isize, 4isize).into())));
+        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 2isize).into(), MoveKind::EnPassant((4isize, 2isize).into()), None));
+        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 4isize).into(), MoveKind::EnPassant((4isize, 4isize).into()), None));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -243,6 +271,109 @@ mod tests {
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
             expected.difference(&possible_moves),
             possible_moves.difference(&expected),
-            );
+        );
+    }
+
+    #[test]
+    fn test_pinned_no_move() {
+        let mut board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .build();
+        board.set_attacking(Color::White);
+        let piece: &PieceKind = board
+            .piece((3isize, 3isize).into())
+            .expect("The piece should exist");
+        let expected: HashSet<Move> = HashSet::new();
+
+        let possible_moves: HashSet<Move> = piece.possible_moves(&board);
+
+        assert_eq!(
+            expected,
+            possible_moves,
+            "\nelements expected missing: {:?}\nelements not expected: {:?}",
+            expected.difference(&possible_moves),
+            possible_moves.difference(&expected),
+        );
+    }
+
+    #[test]
+    fn test_pinned_no_attack() {
+        let mut board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((4isize, 3isize).into(), Color::White)))
+            .build();
+        board.set_attacking(Color::White);
+        let piece: &PieceKind = board
+            .piece((3isize, 3isize).into())
+            .expect("The piece should exist");
+        let expected: HashSet<Move> = HashSet::new();
+
+        let possible_moves: HashSet<Move> = piece.possible_moves(&board);
+
+        assert_eq!(
+            expected,
+            possible_moves,
+            "\nelements expected missing: {:?}\nelements not expected: {:?}",
+            expected.difference(&possible_moves),
+            possible_moves.difference(&expected),
+        );
+    }
+
+    #[test]
+    fn test_pinned_can_move() {
+        let mut board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .build();
+        board.set_attacking(Color::White);
+        let piece: &PieceKind = board
+            .piece((3isize, 3isize).into())
+            .expect("The piece should exist");
+        let mut expected: HashSet<Move> = HashSet::new();
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::PawnMove, None));
+
+        let possible_moves: HashSet<Move> = piece.possible_moves(&board);
+
+        assert_eq!(
+            expected,
+            possible_moves,
+            "\nelements expected missing: {:?}\nelements not expected: {:?}",
+            expected.difference(&possible_moves),
+            possible_moves.difference(&expected),
+        );
+    }
+
+    #[test]
+    fn test_pinned_can_en_passant() {
+        let mut pawn: Pawn = Pawn::new((4isize, 3isize).into(), Color::White);
+        pawn.set_en_passant_possible();
+        let mut board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((7isize, 1isize).into(), Color::Black)))
+            .add(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::White)))
+            .add(PieceKind::Pawn(pawn))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 7isize).into(), Color::White)))
+            .build();
+        board.set_attacking(Color::White);
+        let piece: &PieceKind = board
+            .piece((4isize, 4isize).into())
+            .expect("The piece should exist");
+        let mut expected: HashSet<Move> = HashSet::new();
+        expected.insert(Move::new((4isize, 4isize).into(), (5isize, 3isize).into(), MoveKind::EnPassant((4isize, 3isize).into()), None));
+
+        let possible_moves: HashSet<Move> = piece.possible_moves(&board);
+
+        assert_eq!(
+            expected,
+            possible_moves,
+            "\nelements expected missing: {:?}\nelements not expected: {:?}",
+            expected.difference(&possible_moves),
+            possible_moves.difference(&expected),
+        );
     }
 }
