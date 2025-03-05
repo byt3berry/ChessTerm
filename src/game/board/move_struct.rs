@@ -1,9 +1,9 @@
-use crate::board::position::Position;
+use crate::game::board::position::Position;
 
 use super::pin_kind::PinKind;
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum MoveKind {
+pub(crate) enum MoveKind {
     Attack, // A move that can take a piece
     CastleKingSide,
     CastleQueenSide,
@@ -13,7 +13,7 @@ pub enum MoveKind {
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub struct Move {
+pub(crate) struct Move {
     from: Position,
     to: Position,
     kind: MoveKind,
@@ -21,7 +21,7 @@ pub struct Move {
 }
 
 impl Move {
-    pub fn new(from: Position, to: Position, kind: MoveKind, pin: Option<PinKind>) -> Self {
+    pub(crate) fn new(from: Position, to: Position, kind: MoveKind, pin: Option<PinKind>) -> Self {
         assert_ne!(to, from);
         assert!(from.is_valid());
         assert!(to.is_valid());
@@ -34,28 +34,28 @@ impl Move {
         }
     }
 
-    pub const fn kind(&self) -> MoveKind {
+    pub(super) const fn kind(&self) -> MoveKind {
         self.kind
     }
 
-    pub const fn from(&self) -> Position {
+    pub(super) const fn from(&self) -> Position {
         self.from
     }
 
-    pub const fn to(&self) -> Position {
+    pub(crate) const fn to(&self) -> Position {
         self.to
     }
 
-    pub const fn pin(&self) -> Option<PinKind> {
+    pub(crate) const fn pin(&self) -> Option<PinKind> {
         self.pin
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::board::move_struct::MoveKind;
-    use crate::board::pin_kind::PinKind;
-    use crate::board::position::Position;
+    use crate::game::board::move_struct::MoveKind;
+    use crate::game::board::pin_kind::PinKind;
+    use crate::game::board::position::Position;
 
     use super::Move;
 

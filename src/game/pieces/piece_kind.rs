@@ -1,8 +1,8 @@
 use std::collections::HashSet;
 
-use crate::board::Board;
-use crate::board::color::Color;
-use crate::board::position::Position;
+use crate::game::board::Board;
+use crate::game::board::color::Color;
+use crate::game::board::position::Position;
 
 use super::bishop::Bishop;
 use super::king::King;
@@ -13,7 +13,7 @@ use super::rook::Rook;
 use super::{Move, Piece};
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub enum PieceKind {
+pub(crate) enum PieceKind {
     Bishop(Bishop),
     King(King),
     Knight(Knight),
@@ -23,7 +23,7 @@ pub enum PieceKind {
 }
 
 impl PieceKind {
-    pub fn color(&self) -> Color {
+    pub(crate) fn color(&self) -> Color {
         match self {
             Self::Bishop(bishop) => bishop.color(),
             Self::King(king) => king.color(),
@@ -34,7 +34,7 @@ impl PieceKind {
         }
     }
 
-    pub fn position(&self) -> Position {
+    pub(crate) fn position(&self) -> Position {
         match self {
             Self::Bishop(bishop) => bishop.position(),
             Self::King(king) => king.position(),
@@ -45,7 +45,7 @@ impl PieceKind {
         }
     }
 
-    pub fn set_position(&mut self, position: Position) {
+    pub(crate) fn set_position(&mut self, position: Position) {
         match self {
             Self::Bishop(bishop) => bishop.set_position(position),
             Self::King(king) => king.set_position(position),
@@ -56,7 +56,7 @@ impl PieceKind {
         }
     }
 
-    pub fn possible_moves(&self, board: &Board) -> HashSet<Move> {
+    pub(crate) fn possible_moves(&self, board: &Board) -> HashSet<Move> {
         match self {
             Self::Bishop(bishop) => bishop.possible_moves(board),
             Self::King(king) => king.possible_moves(board),

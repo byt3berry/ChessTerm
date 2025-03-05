@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
-use crate::board::Board;
-use crate::board::color::Color;
-use crate::board::move_struct::{MoveKind, Move};
-use crate::board::position::Position;
+use crate::game::board::Board;
+use crate::game::board::color::Color;
+use crate::game::board::move_struct::{MoveKind, Move};
+use crate::game::board::position::Position;
 
 use super::Piece;
 use super::piece_kind::PieceKind;
@@ -13,7 +13,7 @@ fn add_offsets(offset1: (isize, isize), offset2: (isize, isize)) -> (isize, isiz
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Pawn {
+pub(crate) struct Pawn {
     color: Color,
     position: Position,
     en_passant_possible: bool,
@@ -21,19 +21,19 @@ pub struct Pawn {
 }
 
 impl Pawn {
-    pub const fn set_en_passant_possible(&mut self) {
+    pub(crate) const fn set_en_passant_possible(&mut self) {
         self.en_passant_possible = true;
     }
 
-    pub const fn unset_en_passant_possible(&mut self) {
+    pub(crate) const fn unset_en_passant_possible(&mut self) {
         self.en_passant_possible = false;
     }
 
-    pub const fn set_has_moved(&mut self) {
+    const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
 
-    pub const fn direction(&self) -> (isize, isize) {
+    const fn direction(&self) -> (isize, isize) {
         match self.color {
             Color::White => (-1isize, 0isize),
             Color::Black => (1isize, 0isize),
@@ -137,15 +137,15 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
-    use crate::board::Board;
-    use crate::board::board_builder::BoardBuilder;
-    use crate::board::color::Color;
-    use crate::board::move_struct::{Move, MoveKind};
-    use crate::pieces::Piece;
-    use crate::pieces::bishop::Bishop;
-    use crate::pieces::king::King;
-    use crate::pieces::piece_kind::PieceKind;
-    use crate::pieces::rook::Rook;
+    use crate::game::board::Board;
+    use crate::game::board::board_builder::BoardBuilder;
+    use crate::game::board::color::Color;
+    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::pieces::Piece;
+    use crate::game::pieces::bishop::Bishop;
+    use crate::game::pieces::king::King;
+    use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::rook::Rook;
 
     use super::Pawn;
 

@@ -1,22 +1,22 @@
 use std::collections::HashSet;
 
-use crate::board::Board;
-use crate::board::color::Color;
-use crate::board::move_struct::Move;
-use crate::board::pin_kind::PinKind;
-use crate::board::position::Position;
+use crate::game::board::Board;
+use crate::game::board::color::Color;
+use crate::game::board::move_struct::Move;
+use crate::game::board::pin_kind::PinKind;
+use crate::game::board::position::Position;
 
 use piece_kind::PieceKind;
 
-pub mod bishop;
-pub mod king;
-pub mod knight;
-pub mod pawn;
-pub mod piece_kind;
-pub mod queen;
-pub mod rook;
+pub(crate) mod bishop;
+pub(crate) mod king;
+pub(crate) mod knight;
+pub(crate) mod pawn;
+pub(crate) mod piece_kind;
+pub(crate) mod queen;
+pub(crate) mod rook;
 
-pub trait Piece {
+pub(super) trait Piece {
     fn new(position: Position, color: Color) -> Self;
     fn possible_moves(&self, board: &Board) -> HashSet<Move>;
     fn color(&self) -> Color;

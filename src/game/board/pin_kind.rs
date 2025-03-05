@@ -1,5 +1,5 @@
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub enum PinKind {
+pub(crate) enum PinKind {
     Horizontal,
     Vertical,
     DiagonalTopLeftBottomRight,

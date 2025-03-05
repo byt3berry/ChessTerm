@@ -3,13 +3,13 @@ use std::ops::Add;
 use super::{ROWS, COLUMNS};
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub struct Position {
+pub(crate) struct Position {
     row: isize,
     column: isize,
 }
 
 impl Position {
-    pub const fn to_index(self) -> Option<usize> {
+    pub(super) const fn to_index(self) -> Option<usize> {
         if self.row < 0 || self.row as usize >= ROWS || self.column < 0 || self.column as usize >= COLUMNS {
             return None;
         }
@@ -17,21 +17,21 @@ impl Position {
         Some(self.row as usize * ROWS + self.column as usize)
     }
 
-    pub fn row(&self) -> usize {
+    pub(crate) fn row(&self) -> usize {
         assert!(self.row >= 0, "position {self:?} is invalid");
         assert!(self.row < ROWS as isize, "position {self:?} is invalid");
 
         self.row as usize
     }
 
-    pub fn column(&self) -> usize {
+    pub(crate) fn column(&self) -> usize {
         assert!(self.column >= 0, "position {self:?} is invalid");
         assert!(self.column < COLUMNS as isize, "position {self:?} is invalid");
 
         self.column as usize
     }
 
-    pub fn is_valid(&self) -> bool {
+    pub(super) fn is_valid(&self) -> bool {
         self.row() < ROWS && self.column() < COLUMNS
     }
 }

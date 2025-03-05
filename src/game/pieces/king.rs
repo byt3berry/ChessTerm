@@ -1,22 +1,22 @@
 use std::collections::HashSet;
 
-use crate::board::Board;
-use crate::board::color::Color;
-use crate::board::move_struct::{Move, MoveKind};
-use crate::board::position::Position;
+use crate::game::board::Board;
+use crate::game::board::color::Color;
+use crate::game::board::move_struct::{Move, MoveKind};
+use crate::game::board::position::Position;
 
 use super::Piece;
 use super::piece_kind::PieceKind;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct King {
+pub(crate) struct King {
     color: Color,
     position: Position,
     has_moved: bool,
 }
 
 impl King {
-    pub const fn set_has_moved(&mut self) {
+    const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
 
@@ -28,11 +28,11 @@ impl King {
         (self.position.row(), 6usize).into()
     }
 
-    pub fn queen_side_castling_rook_position(&self) -> Position {
+    pub(crate) fn queen_side_castling_rook_position(&self) -> Position {
         (self.position.row(), 0usize).into()
     }
 
-    pub fn king_side_castling_rook_position(&self) -> Position {
+    pub(crate) fn king_side_castling_rook_position(&self) -> Position {
         (self.position.row(), 7usize).into()
     }
 }
@@ -161,16 +161,16 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
-    use crate::board::Board;
-    use crate::board::board_builder::BoardBuilder;
-    use crate::board::color::Color;
-    use crate::board::move_struct::{Move, MoveKind};
-    use crate::pieces::Piece;
-    use crate::pieces::bishop::Bishop;
-    use crate::pieces::pawn::Pawn;
-    use crate::pieces::piece_kind::PieceKind;
-    use crate::pieces::queen::Queen;
-    use crate::pieces::rook::Rook;
+    use crate::game::board::Board;
+    use crate::game::board::board_builder::BoardBuilder;
+    use crate::game::board::color::Color;
+    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::pieces::Piece;
+    use crate::game::pieces::bishop::Bishop;
+    use crate::game::pieces::pawn::Pawn;
+    use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::queen::Queen;
+    use crate::game::pieces::rook::Rook;
 
     use super::King;
 

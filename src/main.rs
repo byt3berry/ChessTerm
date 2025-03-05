@@ -1,9 +1,9 @@
-use board::Board;
+use game::board::Board;
 use drawer::draw;
 
-mod board;
+mod cursor;
 mod drawer;
-mod pieces;
+mod game;
 
 fn main() {
     let board: Board = Board::init();

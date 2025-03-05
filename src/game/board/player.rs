@@ -5,28 +5,28 @@ use super::move_struct::{Move, MoveKind};
 use super::position::Position;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Player {
+pub(crate) struct Player {
     color: Color,
     attacking: HashSet<Move>,
 }
 
 impl Player {
-    pub fn new(color: Color) -> Self {
+    pub(super) fn new(color: Color) -> Self {
         Self {
             color,
             attacking: HashSet::new(),
         }
     }
 
-    pub fn set_attacking(&mut self, attacking: HashSet<Move>) {
+    pub(super) fn set_attacking(&mut self, attacking: HashSet<Move>) {
         self.attacking = attacking;
     }
 
-    pub const fn attacking(&self) -> &HashSet<Move> {
+    pub(crate) const fn attacking(&self) -> &HashSet<Move> {
         &self.attacking
     }
 
-    pub fn is_attacking(&self, position: Position) -> bool {
+    pub(crate) fn is_attacking(&self, position: Position) -> bool {
         self.attacking.iter().any(|m| m.kind() == MoveKind::Attack && m.to() == position)
     }
 }
@@ -35,8 +35,8 @@ impl Player {
 mod tests {
     use std::collections::HashSet;
 
-    use crate::board::color::Color;
-    use crate::board::move_struct::{Move, MoveKind};
+    use crate::game::board::color::Color;
+    use crate::game::board::move_struct::{Move, MoveKind};
 
     use super::Player;
 

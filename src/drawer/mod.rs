@@ -1,7 +1,7 @@
-use crate::board::color::Color;
-use crate::board::position::Position;
-use crate::board::square::Square;
-use crate::board::{Board, COLUMNS, ROWS};
+use crate::game::board::color::Color;
+use crate::game::board::position::Position;
+use crate::game::board::square::Square;
+use crate::game::board::{Board, COLUMNS, ROWS};
 
 mod pieces;
 mod square;
@@ -12,11 +12,11 @@ const SQUARE_BLACK: u8 = 0;
 const SQUARE_WHITE: u8 = 255;
 const SQUARE_SIZE: usize = 20;
 
-pub trait Drawable {
+trait Drawable {
     fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE];
 }
 
-pub fn draw(board: &Board) {
+pub(crate) fn draw(board: &Board) {
     let mut position: Position;
     clean();
     println!();
@@ -34,7 +34,7 @@ pub fn draw(board: &Board) {
     }
 }
 
-pub fn square_color(position: Position) -> Color {
+fn square_color(position: Position) -> Color {
     assert!(position.row() < ROWS, "position {position:?} is invalid");
     assert!(position.column() < COLUMNS, "position {position:?} is invalid");
 

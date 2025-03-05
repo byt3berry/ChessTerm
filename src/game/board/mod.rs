@@ -7,34 +7,34 @@ use player::Player;
 use position::Position;
 use square::Square;
 
-use crate::pieces::Piece; 
-use crate::pieces::bishop::Bishop;
-use crate::pieces::king::King;
-use crate::pieces::knight::Knight;
-use crate::pieces::pawn::Pawn;
-use crate::pieces::piece_kind::PieceKind;
-use crate::pieces::queen::Queen;
-use crate::pieces::rook::Rook;
+use crate::game::pieces::Piece; 
+use crate::game::pieces::bishop::Bishop;
+use crate::game::pieces::king::King;
+use crate::game::pieces::knight::Knight;
+use crate::game::pieces::pawn::Pawn;
+use crate::game::pieces::piece_kind::PieceKind;
+use crate::game::pieces::queen::Queen;
+use crate::game::pieces::rook::Rook;
 
-pub mod board_builder;
-pub mod color;
-pub mod move_struct;
-pub mod pin_kind;
-pub mod player;
-pub mod position;
-pub mod square;
+pub(super) mod board_builder;
+pub(crate) mod color;
+pub(super) mod move_struct;
+pub(super) mod pin_kind;
+pub(super) mod player;
+pub(crate) mod position;
+pub(crate) mod square;
 
-pub const ROWS: usize = 8;
-pub const COLUMNS: usize = 8;
+pub(crate) const ROWS: usize = 8;
+pub(crate) const COLUMNS: usize = 8;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Board {
+pub(crate) struct Board {
     players: [Player; 2],
     board: [Square; ROWS*COLUMNS],
 }
 
 impl Board {
-    pub fn init() -> Self {
+    pub(crate) fn init() -> Self {
         let mut board_builder = BoardBuilder::new()
             // Rooks
             .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
@@ -69,32 +69,28 @@ impl Board {
         board_builder.build()
     }
 
-    pub fn empty() -> Self {
-        BoardBuilder::new().build()
-    }
-
-    pub const fn new(players: [Player; 2], board: [Square; ROWS*COLUMNS]) -> Self {
+    const fn new(players: [Player; 2], board: [Square; ROWS*COLUMNS]) -> Self {
         Self {
             players,
             board,
         }
     }
 
-    pub const fn player(&self, color: Color) -> &Player {
+    pub(super) const fn player(&self, color: Color) -> &Player {
         match color {
             Color::White => &self.players[0],
             Color::Black => &self.players[1],
         }
     }
 
-    pub const fn player_mut(&mut self, color: Color) -> &mut Player {
+    const fn player_mut(&mut self, color: Color) -> &mut Player {
         match color {
             Color::White => &mut self.players[0],
             Color::Black => &mut self.players[1],
         }
     }
 
-    pub fn square(&self, position: Position) -> Option<&Square> {
+    pub(crate) fn square(&self, position: Position) -> Option<&Square> {
         if let Some(index) = position.to_index() {
             return self.board.get(index);
         }
@@ -102,7 +98,7 @@ impl Board {
         None
     }
 
-    pub fn square_from_index(&self, index: usize) -> Option<&Square> {
+    fn square_from_index(&self, index: usize) -> Option<&Square> {
         if index >= ROWS * COLUMNS {
             return None;
         }
@@ -110,7 +106,7 @@ impl Board {
         self.board.get(index)
     }
 
-    pub fn square_mut(&mut self, position: Position) -> Option<&mut Square> {
+    fn square_mut(&mut self, position: Position) -> Option<&mut Square> {
         if let Some(index) = position.to_index() {
             return self.board.get_mut(index);
         }
@@ -118,7 +114,7 @@ impl Board {
         None
     }
 
-    pub fn piece(&self, position: Position) -> Option<&PieceKind> {
+    pub(super) fn piece(&self, position: Position) -> Option<&PieceKind> {
         if let Some(square) = self.square(position) {
             return square.piece()
         }
@@ -126,7 +122,7 @@ impl Board {
         None
     }
 
-    pub fn piece_from_index(&self, index: usize) -> Option<&PieceKind> {
+    fn piece_from_index(&self, index: usize) -> Option<&PieceKind> {
         if index >= ROWS * COLUMNS {
             return None;
         }
@@ -138,7 +134,7 @@ impl Board {
         None
     }
 
-    pub fn piece_mut_from_index(&mut self, index: usize) -> Option<&mut PieceKind> {
+    fn piece_mut_from_index(&mut self, index: usize) -> Option<&mut PieceKind> {
         if index >= ROWS * COLUMNS {
             return None;
         }
@@ -150,7 +146,7 @@ impl Board {
         None
     }
 
-    pub fn piece_mut(&mut self, position: Position) -> Option<&mut PieceKind> {
+    fn piece_mut(&mut self, position: Position) -> Option<&mut PieceKind> {
         if let Some(square) = self.square_mut(position) {
             return square.piece_mut()
         }
@@ -158,21 +154,21 @@ impl Board {
         None
     }
 
-    pub fn piece_unset(&mut self, position: Position) -> PieceKind {
+    fn piece_unset(&mut self, position: Position) -> PieceKind {
         self
             .square_mut(position)
             .expect("The square in position {position:?} should exist")
             .piece_unset()
     }
 
-    pub fn set_piece(&mut self, position: Position, piece: PieceKind) {
+    fn set_piece(&mut self, position: Position, piece: PieceKind) {
         self
             .square_mut(position)
             .expect("The square in position {position:?} should exist")
             .set_piece(piece);
     }
 
-    pub fn set_attacking(&mut self, color: Color) {
+    pub(super) fn set_attacking(&mut self, color: Color) {
         let mut attacking: HashSet<Move> = HashSet::new();
 
         for index in 0..ROWS*COLUMNS {
@@ -194,7 +190,7 @@ impl Board {
         }
     }
 
-    pub fn make_move(&mut self, piece_move: Move) {
+    fn make_move(&mut self, piece_move: Move) {
         let from: Position = piece_move.from();
         let to: Position = piece_move.to();
 
@@ -262,7 +258,7 @@ impl Board {
         self.unset_all_en_passant();
     }
 
-    pub fn simulate_move(&self, simulated_move: Move) -> Self {
+    fn simulate_move(&self, simulated_move: Move) -> Self {
         let mut simulated_board: Self = self.clone();
         simulated_board.make_move(simulated_move);
 
@@ -281,7 +277,7 @@ impl Board {
         None
     }
 
-    pub fn checked(&self, color: Color) -> bool {
+    fn checked(&self, color: Color) -> bool {
         if let Some(position) = self.king(color) {
             self
                 .player(color.other())
@@ -299,22 +295,22 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
-    use crate::board::board_builder::BoardBuilder;
-    use crate::board::color::Color;
-    use crate::board::move_struct::{Move, MoveKind};
-    use crate::board::square::Square;
-    use crate::pieces::Piece;
-    use crate::pieces::bishop::Bishop;
-    use crate::pieces::king::King;
-    use crate::pieces::pawn::Pawn;
-    use crate::pieces::piece_kind::PieceKind;
-    use crate::pieces::rook::Rook;
+    use crate::game::board::board_builder::BoardBuilder;
+    use crate::game::board::color::Color;
+    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::square::Square;
+    use crate::game::pieces::Piece;
+    use crate::game::pieces::bishop::Bishop;
+    use crate::game::pieces::king::King;
+    use crate::game::pieces::pawn::Pawn;
+    use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::rook::Rook;
 
     use super::Board;
 
     #[test]
     fn test_square() {
-        let board: Board = Board::empty();
+        let board: Board = BoardBuilder::new().build();
         let expected_piece: &Square = &Square::new(Color::White, None);
         let expected: Option<&Square> = Some(expected_piece);
 
@@ -326,7 +322,7 @@ mod tests {
     #[test]
     fn test_square_from_index() {
         let index: usize = 27usize;
-        let board: Board = Board::empty();
+        let board: Board = BoardBuilder::new().build();
         let expected_piece: &Square = &Square::new(Color::White, None);
         let expected: Option<&Square> = Some(expected_piece);
 
@@ -489,7 +485,7 @@ mod tests {
     #[should_panic]
     fn test_make_move_invalid() {
         let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack, None);
-        let mut board: Board = Board::empty();
+        let mut board: Board = BoardBuilder::new().build();
         board.make_move(tested_move);
     }
 

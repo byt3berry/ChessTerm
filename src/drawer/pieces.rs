@@ -1,10 +1,10 @@
-use crate::pieces::bishop::Bishop;
-use crate::pieces::king::King;
-use crate::pieces::knight::Knight;
-use crate::pieces::pawn::Pawn;
-use crate::pieces::piece_kind::PieceKind;
-use crate::pieces::queen::Queen;
-use crate::pieces::rook::Rook;
+use crate::game::pieces::bishop::Bishop;
+use crate::game::pieces::king::King;
+use crate::game::pieces::knight::Knight;
+use crate::game::pieces::pawn::Pawn;
+use crate::game::pieces::piece_kind::PieceKind;
+use crate::game::pieces::queen::Queen;
+use crate::game::pieces::rook::Rook;
 
 use super::{Drawable, SQUARE_SIZE};
 

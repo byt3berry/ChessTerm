@@ -1,34 +1,34 @@
 use std::collections::HashSet;
 
-use crate::board::Board;
-use crate::board::color::Color;
-use crate::board::move_struct::{Move, MoveKind};
-use crate::board::pin_kind::PinKind;
-use crate::board::position::Position;
+use crate::game::board::Board;
+use crate::game::board::color::Color;
+use crate::game::board::move_struct::{Move, MoveKind};
+use crate::game::board::pin_kind::PinKind;
+use crate::game::board::position::Position;
 
 use super::Piece;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
-pub struct Rook {
+pub(crate) struct Rook {
     color: Color,
     position: Position,
     has_moved: bool,
 }
 
 impl Rook {
-    pub const fn has_moved(&self) -> bool {
+    pub(super) const fn has_moved(&self) -> bool {
         self.has_moved
     }
 
-    pub const fn set_has_moved(&mut self) {
+    pub(super) const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
 
-    pub fn queen_side_castling_final_position(&self) -> Position {
+    pub(crate) fn queen_side_castling_final_position(&self) -> Position {
         (self.position.row(), 3usize).into()
     }
 
-    pub fn king_side_castling_final_position(&self) -> Position {
+    pub(crate) fn king_side_castling_final_position(&self) -> Position {
         (self.position.row(), 5usize).into()
     }
 }
@@ -104,16 +104,16 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
-    use crate::board::Board;
-    use crate::board::board_builder::BoardBuilder;
-    use crate::board::color::Color;
-    use crate::board::move_struct::{Move, MoveKind};
-    use crate::board::pin_kind::PinKind;
-    use crate::pieces::bishop::Bishop;
-    use crate::pieces::Piece;
-    use crate::pieces::king::King;
-    use crate::pieces::pawn::Pawn;
-    use crate::pieces::piece_kind::PieceKind;
+    use crate::game::board::Board;
+    use crate::game::board::board_builder::BoardBuilder;
+    use crate::game::board::color::Color;
+    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::pin_kind::PinKind;
+    use crate::game::pieces::bishop::Bishop;
+    use crate::game::pieces::Piece;
+    use crate::game::pieces::king::King;
+    use crate::game::pieces::pawn::Pawn;
+    use crate::game::pieces::piece_kind::PieceKind;
 
     use super::Rook;
 

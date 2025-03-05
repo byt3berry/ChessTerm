@@ -1,4 +1,4 @@
-use crate::pieces::piece_kind::PieceKind;
+use crate::game::pieces::piece_kind::PieceKind;
 
 use super::color::Color;
 use super::player::Player;
@@ -6,20 +6,20 @@ use super::position::Position;
 use super::square::Square;
 use super::{Board, COLUMNS, ROWS};
 
-pub struct BoardBuilder {
+pub(crate) struct BoardBuilder {
     players: [Player; 2],
     board: [Square; ROWS*COLUMNS],
 }
 
 impl BoardBuilder {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             players: [Player::new(Color::White), Player::new(Color::Black)],
             board: [Square::default(); ROWS*COLUMNS],
         }
     }
 
-    pub fn add(mut self, piece: PieceKind) -> Self {
+    pub(crate) fn add(mut self, piece: PieceKind) -> Self {
         let position: Position = piece.position();
         assert!(position.row() < ROWS, "position {position:?} is invalid");
         assert!(position.column() < COLUMNS, "position {position:?} is invalid");
@@ -31,7 +31,7 @@ impl BoardBuilder {
         self
     }
 
-    pub fn build(self) -> Board {
+    pub(crate) fn build(self) -> Board {
         Board::new(self.players, self.board)
     }
 }

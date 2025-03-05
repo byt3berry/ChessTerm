@@ -1,4 +1,4 @@
-use crate::board::square::Square;
+use crate::game::board::square::Square;
 
 use super::{Drawable, SQUARE_SIZE};
 
