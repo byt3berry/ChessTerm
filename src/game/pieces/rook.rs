@@ -2,7 +2,8 @@ use std::collections::HashSet;
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
-use crate::game::board::move_struct::{Move, MoveKind};
+use crate::game::board::move_kind::MoveKind;
+use crate::game::board::move_struct::Move;
 use crate::game::board::pin_kind::PinKind;
 use crate::game::board::position::Position;
 
@@ -20,7 +21,7 @@ impl Rook {
         self.has_moved
     }
 
-    pub(super) const fn set_has_moved(&mut self) {
+    pub(crate) const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
 
@@ -107,7 +108,8 @@ mod tests {
     use crate::game::board::Board;
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
-    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::move_kind::MoveKind;
+    use crate::game::board::move_struct::Move;
     use crate::game::board::pin_kind::PinKind;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::Piece;

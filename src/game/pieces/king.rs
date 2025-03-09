@@ -2,7 +2,8 @@ use std::collections::HashSet;
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
-use crate::game::board::move_struct::{Move, MoveKind};
+use crate::game::board::move_kind::MoveKind;
+use crate::game::board::move_struct::Move;
 use crate::game::board::position::Position;
 
 use super::Piece;
@@ -16,7 +17,7 @@ pub(crate) struct King {
 }
 
 impl King {
-    const fn set_has_moved(&mut self) {
+    pub const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
 
@@ -164,7 +165,8 @@ mod tests {
     use crate::game::board::Board;
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
-    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::move_kind::MoveKind;
+    use crate::game::board::move_struct::Move;
     use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::pawn::Pawn;

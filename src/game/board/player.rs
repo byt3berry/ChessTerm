@@ -1,7 +1,8 @@
 use std::collections::HashSet;
 
 use super::color::Color;
-use super::move_struct::{Move, MoveKind};
+use super::move_kind::MoveKind;
+use super::move_struct::Move;
 use super::position::Position;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -36,7 +37,8 @@ mod tests {
     use std::collections::HashSet;
 
     use crate::game::board::color::Color;
-    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::move_kind::MoveKind;
+    use crate::game::board::move_struct::Move;
 
     use super::Player;
 

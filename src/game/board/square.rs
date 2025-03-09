@@ -9,13 +9,6 @@ pub(crate) struct Square {
 }
 
 impl Square {
-    pub(super) const fn new(color: Color, piece: Option<PieceKind>) -> Self {
-        Self {
-            color,
-            piece,
-        }
-    }
-
     pub(super) const fn set_piece(&mut self, piece: PieceKind) {
         self.piece = Some(piece);
     }
@@ -34,5 +27,15 @@ impl Square {
 
     pub(super) const fn piece_mut(&mut self) -> Option<&mut PieceKind> {
         self.piece.as_mut()
+    }
+}
+
+#[cfg(test)]
+impl Square {
+    pub(super) const fn new(color: Color, piece: Option<PieceKind>) -> Self {
+        Self {
+            color,
+            piece,
+        }
     }
 }

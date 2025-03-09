@@ -2,7 +2,8 @@ use std::collections::HashSet;
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
-use crate::game::board::move_struct::{MoveKind, Move};
+use crate::game::board::move_kind::MoveKind;
+use crate::game::board::move_struct::Move;
 use crate::game::board::position::Position;
 
 use super::Piece;
@@ -29,7 +30,7 @@ impl Pawn {
         self.en_passant_possible = false;
     }
 
-    const fn set_has_moved(&mut self) {
+    pub const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
 
@@ -78,13 +79,13 @@ impl Piece for Pawn {
             to = self.position + direction;
             if let Some(square) = board.square(to) {
                 if square.piece().is_none() {
-                    output.insert(Move::new(self.position, to, MoveKind::PawnMove, None));
+                    output.insert(Move::new(self.position, to, MoveKind::PawnSimpleMove, None));
 
                     if !self.has_moved {
                         to = to + direction;
                         if let Some(square) = board.square(to) {
                             if square.piece().is_none() {
-                                output.insert(Move::new(self.position, to, MoveKind::PawnMove, None));
+                                output.insert(Move::new(self.position, to, MoveKind::PawnDoubleMove, None));
                             }
                         }
                     }
@@ -140,7 +141,8 @@ mod tests {
     use crate::game::board::Board;
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
-    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::move_kind::MoveKind;
+    use crate::game::board::move_struct::Move;
     use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::king::King;
@@ -158,8 +160,8 @@ mod tests {
             .piece((1isize, 3isize).into())
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((1isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::PawnMove, None));
-        expected.insert(Move::new((1isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove, None));
+        expected.insert(Move::new((1isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::PawnSimpleMove, None));
+        expected.insert(Move::new((1isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnDoubleMove, None));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -183,7 +185,7 @@ mod tests {
             .piece((2isize, 3isize).into())
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((2isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnMove, None));
+        expected.insert(Move::new((2isize, 3isize).into(), (3isize, 3isize).into(), MoveKind::PawnSimpleMove, None));
 
         let possible_moves = piece.possible_moves(&board);
 
@@ -335,7 +337,7 @@ mod tests {
             .piece((3isize, 3isize).into())
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::PawnMove, None));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::PawnSimpleMove, None));
 
         let possible_moves: HashSet<Move> = piece.possible_moves(&board);
 

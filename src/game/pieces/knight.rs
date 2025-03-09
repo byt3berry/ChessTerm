@@ -2,7 +2,8 @@ use std::collections::HashSet;
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
-use crate::game::board::move_struct::{Move, MoveKind};
+use crate::game::board::move_kind::MoveKind;
+use crate::game::board::move_struct::Move;
 use crate::game::board::position::Position;
 
 use super::Piece;
@@ -78,7 +79,8 @@ mod tests {
     use crate::game::board::Board;
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
-    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::move_kind::MoveKind;
+    use crate::game::board::move_struct::Move;
     use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::king::King;

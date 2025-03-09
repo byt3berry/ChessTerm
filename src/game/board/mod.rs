@@ -2,7 +2,8 @@ use std::collections::HashSet;
 
 use board_builder::BoardBuilder;
 use color::Color;
-use move_struct::{Move, MoveKind};
+use move_kind::MoveKind;
+use move_struct::Move;
 use player::Player;
 use position::Position;
 use square::Square;
@@ -23,6 +24,7 @@ pub(super) mod pin_kind;
 pub(super) mod player;
 pub(crate) mod position;
 pub(crate) mod square;
+pub mod move_kind;
 
 pub(crate) const ROWS: usize = 8;
 pub(crate) const COLUMNS: usize = 8;
@@ -98,14 +100,6 @@ impl Board {
         None
     }
 
-    fn square_from_index(&self, index: usize) -> Option<&Square> {
-        if index >= ROWS * COLUMNS {
-            return None;
-        }
-
-        self.board.get(index)
-    }
-
     fn square_mut(&mut self, position: Position) -> Option<&mut Square> {
         if let Some(index) = position.to_index() {
             return self.board.get_mut(index);
@@ -129,26 +123,6 @@ impl Board {
 
         if let Some(square) = self.board.get(index) {
             return square.piece();
-        }
-
-        None
-    }
-
-    fn piece_mut_from_index(&mut self, index: usize) -> Option<&mut PieceKind> {
-        if index >= ROWS * COLUMNS {
-            return None;
-        }
-
-        if let Some(square) = self.board.get_mut(index) {
-            return square.piece_mut();
-        }
-
-        None
-    }
-
-    fn piece_mut(&mut self, position: Position) -> Option<&mut PieceKind> {
-        if let Some(square) = self.square_mut(position) {
-            return square.piece_mut()
         }
 
         None
@@ -182,35 +156,72 @@ impl Board {
         self.player_mut(color).set_attacking(attacking);
     }
 
-    fn unset_all_en_passant(&mut self) {
-        for index in 0..ROWS*COLUMNS {
-            if let Some(PieceKind::Pawn(pawn)) = self.piece_mut_from_index(index) {
-                pawn.unset_en_passant_possible();
-            }
-        }
+    fn unset_all_en_passant(&mut self, color: Color) {
+        self.board
+            .iter_mut()
+            .filter(|square| square.piece().is_some())
+            .for_each(|square| {
+                if let PieceKind::Pawn(ref mut pawn) = square.piece_mut().expect("The square should exist") {
+                    if pawn.color() == color {
+                        pawn.unset_en_passant_possible();
+                    }
+                }
+            });
     }
 
-    pub fn make_move(&mut self, piece_move: &Move) {
+    pub fn make_move(&mut self, piece_move: &Move, color: Color) {
         let from: Position = piece_move.from();
         let to: Position = piece_move.to();
 
         match piece_move.kind() {
-            MoveKind::Attack | MoveKind::PawnMove => {
+            MoveKind::Attack => {
+                let mut piece: PieceKind = self.piece_unset(from);
+
+                if let PieceKind::Rook(ref mut rook) = piece {
+                    rook.set_has_moved();
+                } else if let PieceKind::King(ref mut king) = piece {
+                    king.set_has_moved();
+                };
+
+                piece.set_position(to);
+                self.set_piece(to, piece);
+            }
+            MoveKind::PawnSimpleMove => {
                 let mut piece: PieceKind = self.piece_unset(from);
                 piece.set_position(to);
+
+                let PieceKind::Pawn(ref mut pawn) = piece else {
+                    panic!("Only pawn can make SimplePawnMove");
+                };
+
+                pawn.set_has_moved();
+                self.set_piece(to, piece);
+            }
+            MoveKind::PawnDoubleMove => {
+                let mut piece: PieceKind = self.piece_unset(from);
+                piece.set_position(to);
+
+                let PieceKind::Pawn(ref mut pawn) = piece else {
+                    panic!("Only pawn can make SimplePawnMove");
+                };
+
+                pawn.set_has_moved();
+                pawn.set_en_passant_possible();
                 self.set_piece(to, piece);
             }
             MoveKind::CastleKingSide => {
                 let mut piece_king: PieceKind = self.piece_unset(from);
-                let PieceKind::King(king) = piece_king else {
+                let PieceKind::King(ref mut king) = piece_king else {
                     panic!("The piece in position {from:?} should be a king");
                 };
+                king.set_has_moved();
 
                 let rook_position: Position = king.king_side_castling_rook_position();
                 let mut piece_rook: PieceKind = self.piece_unset(rook_position);
-                let PieceKind::Rook(rook) = piece_rook else {
+                let PieceKind::Rook(ref mut rook) = piece_rook else {
                     panic!("The piece in position {rook_position:?} should be a rook");
                 };
+                rook.set_has_moved();
 
                 piece_king.set_position(to);
                 self.set_piece(to, piece_king);
@@ -221,15 +232,17 @@ impl Board {
             }
             MoveKind::CastleQueenSide => {
                 let mut piece_king: PieceKind = self.piece_unset(from);
-                let PieceKind::King(king) = piece_king else {
+                let PieceKind::King(ref mut king) = piece_king else {
                     panic!("The piece in position {from:?} should be a king");
                 };
+                king.set_has_moved();
 
                 let rook_position: Position = king.queen_side_castling_rook_position();
                 let mut piece_rook: PieceKind = self.piece_unset(rook_position);
-                let PieceKind::Rook(rook) = piece_rook else {
+                let PieceKind::Rook(ref mut rook) = piece_rook else {
                     panic!("The piece in position {rook_position:?} should be a rook");
                 };
+                rook.set_has_moved();
 
                 piece_king.set_position(to);
                 self.set_piece(to, piece_king);
@@ -255,12 +268,12 @@ impl Board {
             MoveKind::Promotion => todo!(),
         }
 
-        self.unset_all_en_passant();
+        self.unset_all_en_passant(color.other());
     }
 
-    fn simulate_move(&self, simulated_move: Move) -> Self {
+    fn simulate_move(&self, simulated_move: Move, color: Color) -> Self {
         let mut simulated_board: Self = self.clone();
-        simulated_board.make_move(&simulated_move);
+        simulated_board.make_move(&simulated_move, color);
 
         simulated_board
     }
@@ -291,13 +304,18 @@ impl Board {
 }
 
 #[cfg(test)]
+impl Board {
+}
+
+#[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
-    use crate::game::board::move_struct::{Move, MoveKind};
+    use crate::game::board::move_kind::MoveKind;
+    use crate::game::board::move_struct::Move;
     use crate::game::board::square::Square;
     use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
@@ -315,18 +333,6 @@ mod tests {
         let expected: Option<&Square> = Some(expected_piece);
 
         let square: Option<&Square> = board.square((3isize, 3isize).into());
-
-        assert_eq!(expected, square);
-    }
-
-    #[test]
-    fn test_square_from_index() {
-        let index: usize = 27usize;
-        let board: Board = BoardBuilder::new().build();
-        let expected_piece: &Square = &Square::new(Color::White, None);
-        let expected: Option<&Square> = Some(expected_piece);
-
-        let square: Option<&Square> = board.square_from_index(index);
 
         assert_eq!(expected, square);
     }
@@ -390,48 +396,11 @@ mod tests {
     }
 
     #[test]
-    fn test_piece_mut_from_index() {
-        let mut board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
-            .build();
-        let expected_piece: &mut PieceKind = &mut PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black));
-        let expected: Option<&mut PieceKind> = Some(expected_piece);
-
-        let index: usize = 27usize;
-        let piece: Option<&mut PieceKind> = board.piece_mut_from_index(index);
-
-        assert_eq!(expected, piece);
-    }
-
-    #[test]
     fn test_piece_invalid() {
         let board: Board = BoardBuilder::new().build();
         let expected: Option<&PieceKind> = None;
 
         let piece: Option<&PieceKind> = board.piece((10isize, 12isize).into());
-
-        assert_eq!(expected, piece);
-    }
-
-    #[test]
-    fn test_piece_mut() {
-        let mut board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
-            .build();
-        let expected_piece: &mut PieceKind = &mut PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black));
-        let expected: Option<&mut PieceKind> = Some(expected_piece);
-
-        let piece: Option<&mut PieceKind> = board.piece_mut((3isize, 3isize).into());
-
-        assert_eq!(expected, piece);
-    }
-
-    #[test]
-    fn test_piece_mut_invalid() {
-        let mut board: Board = BoardBuilder::new().build();
-        let expected: Option<&mut PieceKind> = None;
-
-        let piece: Option<&mut PieceKind> = board.piece_mut((10isize, 12isize).into());
 
         assert_eq!(expected, piece);
     }
@@ -486,7 +455,7 @@ mod tests {
     fn test_make_move_invalid() {
         let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack, None);
         let mut board: Board = BoardBuilder::new().build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::White);
     }
 
     #[test]
@@ -495,7 +464,7 @@ mod tests {
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((1isize, 2isize).into(), Color::Black)))
@@ -511,7 +480,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::White)))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((1isize, 2isize).into(), Color::Black)))
@@ -522,14 +491,16 @@ mod tests {
 
     #[test]
     fn test_make_move_pawn_move() {
-        let tested_move: Move = Move::new((1isize, 2isize).into(), (2isize, 2isize).into(), MoveKind::PawnMove, None);
+        let tested_move: Move = Move::new((1isize, 2isize).into(), (2isize, 2isize).into(), MoveKind::PawnSimpleMove, None);
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::Black)))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
+        let mut expected_pawn: Pawn = Pawn::new((2isize, 2isize).into(), Color::Black);
+        expected_pawn.set_has_moved();
         let expected: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((2isize, 2isize).into(), Color::Black)))
+            .add(PieceKind::Pawn(expected_pawn))
             .build();
 
         assert_eq!(expected, board);
@@ -544,7 +515,7 @@ mod tests {
             .add(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
             .add(PieceKind::Pawn(pawn))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((5isize, 3isize).into(), Color::Black)))
@@ -562,7 +533,7 @@ mod tests {
             .add(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
             .add(PieceKind::Pawn(pawn))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((5isize, 2isize).into(), Color::Black)))
@@ -579,11 +550,15 @@ mod tests {
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
+        let mut expected_king: King = King::new((0isize, 2isize).into(), Color::Black);
+        expected_king.set_has_moved();
+        let mut expected_rook: Rook = Rook::new((0isize, 3isize).into(), Color::Black);
+        expected_rook.set_has_moved();
         let expected: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(expected_king))
+            .add(PieceKind::Rook(expected_rook))
             .build();
 
         assert_eq!(expected, board);
@@ -596,11 +571,15 @@ mod tests {
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
-        board.make_move(&tested_move);
+        board.make_move(&tested_move, Color::Black);
 
+        let mut expected_king: King = King::new((0isize, 6isize).into(), Color::Black);
+        expected_king.set_has_moved();
+        let mut expected_rook: Rook = Rook::new((0isize, 5isize).into(), Color::Black);
+        expected_rook.set_has_moved();
         let expected: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 6isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 5isize).into(), Color::Black)))
+            .add(PieceKind::King(expected_king))
+            .add(PieceKind::Rook(expected_rook))
             .build();
 
         assert_eq!(expected, board);

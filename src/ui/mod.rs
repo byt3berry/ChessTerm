@@ -1,5 +1,6 @@
 use anyhow::Result;
-use cursor::{cursor_event::CursorEvent, Cursor};
+use cursor::Cursor;
+use cursor::cursor_event::CursorEvent;
 use drawer::{clean_screen, draw_game};
 
 use crate::game::ChessEngine;

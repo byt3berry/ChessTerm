@@ -1,6 +1,10 @@
 use std::collections::HashSet;
 
-use board::{color::Color, move_struct::Move, position::Position, square::Square, Board};
+use board::Board;
+use board::color::Color;
+use board::move_struct::Move;
+use board::position::Position;
+use board::square::Square;
 
 pub(super) mod pieces;
 pub(super) mod board;
@@ -40,7 +44,7 @@ impl ChessEngine {
                 return false;
             };
 
-        self.board.make_move(try_move);
+        self.board.make_move(try_move, self.current_player);
         self.current_player = self.current_player.other();
         true
     }
@@ -50,6 +54,7 @@ impl ChessEngine {
             return;
         };
 
+        self.board.set_attacking(self.current_player.other());
         if let Some(piece) = self.board.piece(position) {
             if piece.color() == self.current_player {
                 self.possible_moves = Some(piece.possible_moves(&self.board));

@@ -1,16 +1,6 @@
 use crate::game::board::position::Position;
 
-use super::pin_kind::PinKind;
-
-#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
-pub(crate) enum MoveKind {
-    Attack, // A move that can take a piece
-    CastleKingSide,
-    CastleQueenSide,
-    EnPassant(Position),
-    PawnMove, // A pawn move that can not take a piece (vertical pawn move)
-    Promotion,
-}
+use super::{move_kind::MoveKind, pin_kind::PinKind};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct Move {
