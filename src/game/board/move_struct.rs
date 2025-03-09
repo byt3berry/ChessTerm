@@ -38,7 +38,7 @@ impl Move {
         self.kind
     }
 
-    pub(super) const fn from(&self) -> Position {
+    pub(crate) const fn from(&self) -> Position {
         self.from
     }
 

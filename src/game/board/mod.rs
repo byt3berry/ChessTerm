@@ -190,7 +190,7 @@ impl Board {
         }
     }
 
-    fn make_move(&mut self, piece_move: Move) {
+    pub fn make_move(&mut self, piece_move: &Move) {
         let from: Position = piece_move.from();
         let to: Position = piece_move.to();
 
@@ -260,7 +260,7 @@ impl Board {
 
     fn simulate_move(&self, simulated_move: Move) -> Self {
         let mut simulated_board: Self = self.clone();
-        simulated_board.make_move(simulated_move);
+        simulated_board.make_move(&simulated_move);
 
         simulated_board
     }
@@ -486,7 +486,7 @@ mod tests {
     fn test_make_move_invalid() {
         let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack, None);
         let mut board: Board = BoardBuilder::new().build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
     }
 
     #[test]
@@ -495,7 +495,7 @@ mod tests {
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((1isize, 2isize).into(), Color::Black)))
@@ -511,7 +511,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::White)))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((1isize, 2isize).into(), Color::Black)))
@@ -526,7 +526,7 @@ mod tests {
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::Black)))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((2isize, 2isize).into(), Color::Black)))
@@ -544,7 +544,7 @@ mod tests {
             .add(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
             .add(PieceKind::Pawn(pawn))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((5isize, 3isize).into(), Color::Black)))
@@ -562,7 +562,7 @@ mod tests {
             .add(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
             .add(PieceKind::Pawn(pawn))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((5isize, 2isize).into(), Color::Black)))
@@ -579,7 +579,7 @@ mod tests {
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::King(King::new((0isize, 2isize).into(), Color::Black)))
@@ -596,7 +596,7 @@ mod tests {
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
-        board.make_move(tested_move);
+        board.make_move(&tested_move);
 
         let expected: Board = BoardBuilder::new()
             .add(PieceKind::King(King::new((0isize, 6isize).into(), Color::Black)))
