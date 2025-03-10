@@ -1,2 +1,2 @@
-pub mod drawer;
-pub mod cursor;
+pub(super) mod drawer;
+pub(super) mod cursor;

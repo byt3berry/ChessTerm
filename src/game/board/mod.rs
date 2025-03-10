@@ -20,7 +20,6 @@ use crate::game::pieces::rook::Rook;
 pub mod board_builder;
 pub(crate) mod color;
 pub(super) mod move_struct;
-pub(super) mod pin_kind;
 pub(super) mod player;
 pub(crate) mod position;
 pub(crate) mod square;
@@ -82,6 +81,7 @@ impl Board {
         match color {
             Color::White => &self.players[0],
             Color::Black => &self.players[1],
+            Color::Any => panic!("No player can be associated with color \"Any\""),
         }
     }
 
@@ -89,46 +89,20 @@ impl Board {
         match color {
             Color::White => &mut self.players[0],
             Color::Black => &mut self.players[1],
+            Color::Any => panic!("No player can be associated with color \"Any\""),
         }
     }
 
     pub(crate) fn square(&self, position: Position) -> Option<&Square> {
-        if let Some(index) = position.to_index() {
-            return self.board.get(index);
-        }
-
-        None
+        self.board.get(position.to_index()?)
     }
 
     fn square_mut(&mut self, position: Position) -> Option<&mut Square> {
-        if let Some(index) = position.to_index() {
-            return self.board.get_mut(index);
-        }
-
-        None
+        self.board.get_mut(position.to_index()?)
     }
 
     pub(super) fn piece(&self, position: Position, color: Color) -> Option<&PieceKind> {
-        if let Some(square) = self.square(position) {
-            let piece: Option<&PieceKind> = square.piece();
-            if piece.is_some_and(|piece| piece.color() == color) {
-                return piece;
-            }
-        }
-
-        None
-    }
-
-    fn piece_from_index(&self, index: usize) -> Option<&PieceKind> {
-        if index >= ROWS * COLUMNS {
-            return None;
-        }
-
-        if let Some(square) = self.board.get(index) {
-            return square.piece();
-        }
-
-        None
+        self.square(position)?.piece(color)
     }
 
     fn piece_unset(&mut self, position: Position) -> PieceKind {
@@ -146,15 +120,12 @@ impl Board {
     }
 
     pub(super) fn set_possible_moves(&mut self, color: Color) {
-        let mut possible_moves: HashSet<Move> = HashSet::new();
-
-        for index in 0..ROWS*COLUMNS {
-            if let Some(piece) = self.piece_from_index(index) {
-                if piece.color() == color {
-                    possible_moves.extend(piece.possible_moves(self));
-                }
-            }
-        }
+        let possible_moves: HashSet<Move> = self
+            .board
+            .iter()
+            .filter_map(|square| square.piece(color))
+            .flat_map(|piece| piece.possible_moves(self))
+            .collect();
 
         self.player_mut(color).set_possible_moves(possible_moves);
     }
@@ -162,15 +133,10 @@ impl Board {
     fn unset_all_en_passant(&mut self, color: Color) {
         self.board
             .iter_mut()
-            .filter(|square| square.piece().is_some())
-            .for_each(|square| {
-                if let PieceKind::Pawn(ref mut pawn) = square.piece_mut().expect("The square should exist") {
-                    if pawn.color() == color {
-                        pawn.unset_en_passant_possible();
-                    }
-                }
-            });
-    }
+            .filter_map(|square| square.piece_mut(color))
+            .filter_map(|piece| if let PieceKind::Pawn(pawn) = piece { Some(pawn) } else { None })
+            .for_each(|pawn| pawn.unset_en_passant_possible());
+        }
 
     pub fn make_move(&mut self, piece_move: &Move, color: Color) {
         let from: Position = piece_move.from();
@@ -262,7 +228,7 @@ impl Board {
 
                 let piece_attacked: PieceKind = self.piece_unset(attacked_position);
                 let PieceKind::Pawn(_) = piece_attacked else {
-                    panic!("The piece in position {from:?} should be a pawn");
+                    panic!("The piece in position {attacked_position:?} should be a pawn");
                 };
 
                 piece_attacker.set_position(to);
@@ -282,15 +248,13 @@ impl Board {
     }
 
     pub fn king(&self, color: Color) -> Option<Position> {
-        for index in 0..ROWS*COLUMNS {
-            if let Some(PieceKind::King(king)) = self.piece_from_index(index) {
-                if king.color() == color {
-                    return Some(king.position());
-                }
-            }
-        }
-
-        None
+        self
+            .board
+            .iter()
+            .filter_map(|square| square.piece(color))
+            .filter(|piece| matches!(piece, PieceKind::King(_)))
+            .map(|piece| piece.position())
+            .next()
     }
 
     pub fn possible_moves(&self, color: Color) -> &HashSet<Move> {
@@ -333,7 +297,7 @@ mod tests {
     #[test]
     fn test_square() {
         let board: Board = BoardBuilder::new().build();
-        let expected_piece: &Square = &Square::new(Color::White, None);
+        let expected_piece: &Square = &Square::new(None);
         let expected: Option<&Square> = Some(expected_piece);
 
         let square: Option<&Square> = board.square((3isize, 3isize).into());
@@ -354,7 +318,7 @@ mod tests {
     #[test]
     fn test_square_mut() {
         let mut board: Board = BoardBuilder::new().build();
-        let expected_piece: &mut Square = &mut Square::new(Color::White, None);
+        let expected_piece: &mut Square = &mut Square::new(None);
         let expected: Option<&mut Square> = Some(expected_piece);
 
         let square: Option<&mut Square> = board.square_mut((3isize, 3isize).into());
@@ -386,20 +350,6 @@ mod tests {
     }
 
     #[test]
-    fn test_piece_from_index() {
-        let board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
-            .build();
-        let expected_piece: &PieceKind = &PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black));
-        let expected: Option<&PieceKind> = Some(expected_piece);
-
-        let index: usize = 27usize;
-        let piece: Option<&PieceKind> = board.piece_from_index(index);
-
-        assert_eq!(expected, piece);
-    }
-
-    #[test]
     fn test_piece_invalid() {
         let board: Board = BoardBuilder::new().build();
         let expected: Option<&PieceKind> = None;
@@ -418,30 +368,30 @@ mod tests {
             .build();
         board.set_possible_moves(Color::Black);
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((3isize, 3isize).into(), (0isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (5isize, 6isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (1isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 0isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 1isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 2isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 4isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 5isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 6isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 7isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (5isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (6isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((3isize, 3isize).into(), (7isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (1isize, 0isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (2isize, 1isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (3isize, 2isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (4isize, 3isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (4isize, 7isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (5isize, 4isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (5isize, 6isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (7isize, 4isize).into(), MoveKind::Attack, None));
-        expected.insert(Move::new((6isize, 5isize).into(), (7isize, 6isize).into(), MoveKind::Attack, None));
+        expected.insert(Move::new((3isize, 3isize).into(), (0isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (5isize, 6isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (1isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 0isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 1isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 2isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 5isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 6isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 7isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (5isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (6isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((3isize, 3isize).into(), (7isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (1isize, 0isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (2isize, 1isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (3isize, 2isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (4isize, 3isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (4isize, 7isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (5isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (5isize, 6isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (7isize, 4isize).into(), MoveKind::Attack));
+        expected.insert(Move::new((6isize, 5isize).into(), (7isize, 6isize).into(), MoveKind::Attack));
 
         let possible_moves: &HashSet<Move> = board.possible_moves(Color::Black);
 
@@ -457,14 +407,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_make_move_invalid() {
-        let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack, None);
+        let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack);
         let mut board: Board = BoardBuilder::new().build();
         board.make_move(&tested_move, Color::White);
     }
 
     #[test]
     fn test_make_move_attack() {
-        let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack, None);
+        let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack);
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .build();
@@ -479,7 +429,7 @@ mod tests {
 
     #[test]
     fn test_make_move_capture() {
-        let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack, None);
+        let tested_move: Move = Move::new((6isize, 5isize).into(), (1isize, 2isize).into(), MoveKind::Attack);
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::White)))
@@ -495,7 +445,7 @@ mod tests {
 
     #[test]
     fn test_make_move_pawn_move() {
-        let tested_move: Move = Move::new((1isize, 2isize).into(), (2isize, 2isize).into(), MoveKind::PawnSimpleMove, None);
+        let tested_move: Move = Move::new((1isize, 2isize).into(), (2isize, 2isize).into(), MoveKind::PawnSimpleMove);
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::Black)))
             .build();
@@ -512,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_make_move_en_passant() {
-        let tested_move: Move = Move::new((4isize, 2isize).into(), (5isize, 3isize).into(), MoveKind::EnPassant((4isize, 3isize).into()), None);
+        let tested_move: Move = Move::new((4isize, 2isize).into(), (5isize, 3isize).into(), MoveKind::EnPassant((4isize, 3isize).into()));
         let mut pawn: Pawn = Pawn::new((4isize, 3isize).into(), Color::White);
         pawn.set_en_passant_possible();
         let mut board: Board = BoardBuilder::new()
@@ -530,7 +480,7 @@ mod tests {
 
     #[test]
     fn test_make_move_ignore_en_passant() {
-        let tested_move: Move = Move::new((4isize, 2isize).into(), (5isize, 2isize).into(), MoveKind::Attack, None);
+        let tested_move: Move = Move::new((4isize, 2isize).into(), (5isize, 2isize).into(), MoveKind::Attack);
         let mut pawn: Pawn = Pawn::new((4isize, 3isize).into(), Color::White);
         pawn.set_en_passant_possible();
         let mut board: Board = BoardBuilder::new()
@@ -549,7 +499,7 @@ mod tests {
 
     #[test]
     fn test_make_move_queen_side_castle() {
-        let tested_move: Move = Move::new((0isize, 4isize).into(), (0isize, 2isize).into(), MoveKind::CastleQueenSide, None);
+        let tested_move: Move = Move::new((0isize, 4isize).into(), (0isize, 2isize).into(), MoveKind::CastleQueenSide);
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
@@ -570,7 +520,7 @@ mod tests {
 
     #[test]
     fn test_make_move_king_side_castle() {
-        let tested_move: Move = Move::new((0isize, 4isize).into(), (0isize, 6isize).into(), MoveKind::CastleKingSide, None);
+        let tested_move: Move = Move::new((0isize, 4isize).into(), (0isize, 6isize).into(), MoveKind::CastleKingSide);
         let mut board: Board = BoardBuilder::new()
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))

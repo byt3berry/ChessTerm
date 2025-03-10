@@ -1,8 +1,9 @@
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) enum Color {
-    #[default]
     White,
     Black,
+    #[default]
+    Any,
 }
 
 impl Color {
@@ -10,6 +11,7 @@ impl Color {
         match self {
             Self::White => Self::Black,
             Self::Black => Self::White,
+            Self::Any => panic!("Can't call other on color \"Any\"")
         }
     }
 }

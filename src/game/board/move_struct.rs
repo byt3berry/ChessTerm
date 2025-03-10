@@ -1,17 +1,16 @@
 use crate::game::board::position::Position;
 
-use super::{move_kind::MoveKind, pin_kind::PinKind};
+use super::move_kind::MoveKind;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct Move {
     from: Position,
     to: Position,
     kind: MoveKind,
-    pin: Option<PinKind>,
 }
 
 impl Move {
-    pub(crate) fn new(from: Position, to: Position, kind: MoveKind, pin: Option<PinKind>) -> Self {
+    pub(crate) fn new(from: Position, to: Position, kind: MoveKind) -> Self {
         assert_ne!(to, from);
         assert!(from.is_valid());
         assert!(to.is_valid());
@@ -20,7 +19,6 @@ impl Move {
             from,
             to,
             kind,
-            pin,
         }
     }
 
@@ -35,16 +33,11 @@ impl Move {
     pub(crate) const fn to(&self) -> Position {
         self.to
     }
-
-    pub(crate) const fn pin(&self) -> Option<PinKind> {
-        self.pin
-    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::game::board::move_struct::MoveKind;
-    use crate::game::board::pin_kind::PinKind;
     use crate::game::board::position::Position;
 
     use super::Move;
@@ -55,9 +48,8 @@ mod tests {
         let from: Position = (3isize, 3isize).into();
         let to: Position = (3isize, 3isize).into();
         let kind: MoveKind = MoveKind::Attack;
-        let pin: Option<PinKind> = None;
 
-        Move::new(from, to, kind, pin);
+        Move::new(from, to, kind);
     }
 
     #[test]
@@ -65,9 +57,8 @@ mod tests {
         let from: Position = (3isize, 3isize).into();
         let to: Position = (7isize, 4isize).into();
         let kind: MoveKind = MoveKind::Attack;
-        let pin: Option<PinKind> = None;
 
-        Move::new(from, to, kind, pin);
+        Move::new(from, to, kind);
     }
 
     #[test]
@@ -76,8 +67,7 @@ mod tests {
         let from: Position = (54isize, 65isize).into();
         let to: Position = (54isize, 66isize).into();
         let kind: MoveKind = MoveKind::Attack;
-        let pin: Option<PinKind> = None;
 
-        Move::new(from, to, kind, pin);
+        Move::new(from, to, kind);
     }
 }

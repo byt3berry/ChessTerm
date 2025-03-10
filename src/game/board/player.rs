@@ -28,7 +28,10 @@ impl Player {
     }
 
     pub(crate) fn is_attacking(&self, position: Position) -> bool {
-        self.possible_moves.iter().any(|m| m.kind() == MoveKind::Attack && m.to() == position)
+        self
+            .possible_moves
+            .iter()
+            .any(|m| m.kind() == MoveKind::Attack && m.to() == position)
     }
 }
 
@@ -46,9 +49,9 @@ mod tests {
     fn test_is_attacking() {
         let mut player: Player = Player::new(Color::Black);
         let mut possible_moves: HashSet<Move> = HashSet::new();
-        possible_moves.insert(Move::new((1isize, 4isize).into(), (5isize, 3isize).into(), MoveKind::Attack, None));
-        possible_moves.insert(Move::new((4isize, 6isize).into(), (4isize, 4isize).into(), MoveKind::Attack, None));
-        possible_moves.insert(Move::new((7isize, 0isize).into(), (7isize, 7isize).into(), MoveKind::Attack, None));
+        possible_moves.insert(Move::new((1isize, 4isize).into(), (5isize, 3isize).into(), MoveKind::Attack));
+        possible_moves.insert(Move::new((4isize, 6isize).into(), (4isize, 4isize).into(), MoveKind::Attack));
+        possible_moves.insert(Move::new((7isize, 0isize).into(), (7isize, 7isize).into(), MoveKind::Attack));
         player.set_possible_moves(possible_moves);
 
         assert!(player.is_attacking((5isize, 3isize).into()));

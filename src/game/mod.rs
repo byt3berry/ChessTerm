@@ -5,6 +5,7 @@ use board::color::Color;
 use board::move_struct::Move;
 use board::position::Position;
 use board::square::Square;
+use pieces::Piece;
 
 pub(super) mod pieces;
 pub(super) mod board;
@@ -131,10 +132,13 @@ mod tests {
     use crate::game::board::color::Color;
     use crate::game::board::position::Position;
     use crate::game::pieces::Piece;
+    use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::king::King;
+    use crate::game::pieces::knight::Knight;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;
     use crate::game::pieces::queen::Queen;
+    use crate::game::pieces::rook::Rook;
 
     use super::ChessEngine;
 
@@ -150,10 +154,255 @@ mod tests {
         chess_game.set_possible_moves(Some((4isize, 6isize).into()));
         chess_game.try_move(Some((4isize, 6isize).into()), Some((4isize, 7isize).into()));
         chess_game.set_possible_moves(Some((6isize, 6isize).into()));
-        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((6isize, 6isize).into()));
-
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((5isize, 6isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((6isize, 6isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_bishop_pinned_no_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let expected: HashSet<Position> = HashSet::new();
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_bishop_pinned_can_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Bishop(Bishop::new((1isize, 1isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((1isize, 1isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((2isize, 2isize).into());
+        expected.insert((3isize, 3isize).into());
+        expected.insert((4isize, 4isize).into());
+        expected.insert((5isize, 5isize).into());
+        expected.insert((6isize, 6isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((1isize, 1isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_king_moves_attacked_square_other_color() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((2isize, 0isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((4isize, 0isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let expected: HashSet<Position> = HashSet::new();
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_king_moves_attacked_square_same_color() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((2isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((4isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::Black)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((2isize, 2isize).into());
+        expected.insert((2isize, 3isize).into());
+        expected.insert((2isize, 4isize).into());
+        expected.insert((3isize, 2isize).into());
+        expected.insert((3isize, 4isize).into());
+        expected.insert((4isize, 2isize).into());
+        expected.insert((4isize, 3isize).into());
+        expected.insert((4isize, 4isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_knight_pinned_no_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let expected: HashSet<Position> = HashSet::new();
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_pawn_pinned_no_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let expected: HashSet<Position> = HashSet::new();
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_pawn_pinned_no_attack() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((4isize, 3isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let expected: HashSet<Position> = HashSet::new();
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_pawn_pinned_can_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((4isize, 3isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_pawn_pinned_can_en_passant() {
+        let mut pawn: Pawn = Pawn::new((4isize, 3isize).into(), Color::White);
+        pawn.set_en_passant_possible();
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((7isize, 1isize).into(), Color::Black)))
+            .add(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::White)))
+            .add(PieceKind::Pawn(pawn))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 7isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((4isize, 4isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((5isize, 3isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((4isize, 4isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_queen_pinned_can_move_straight() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Queen(Queen::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((1isize, 3isize).into());
+        expected.insert((2isize, 3isize).into());
+        expected.insert((4isize, 3isize).into());
+        expected.insert((5isize, 3isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_queen_pinned_can_move_diagonal() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Queen(Queen::new((1isize, 1isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((1isize, 1isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((2isize, 2isize).into());
+        expected.insert((3isize, 3isize).into());
+        expected.insert((4isize, 4isize).into());
+        expected.insert((5isize, 5isize).into());
+        expected.insert((6isize, 6isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((1isize, 1isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_rook_pinned_no_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Rook(Rook::new((1isize, 1isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((1isize, 1isize).into()));
+        let expected: HashSet<Position> = HashSet::new();
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((1isize, 1isize).into()));
+
+        assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_rook_pinned_can_move() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::Rook(Rook::new((3isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        let mut expected: HashSet<Position> = HashSet::new();
+        expected.insert((1isize, 3isize).into());
+        expected.insert((2isize, 3isize).into());
+        expected.insert((4isize, 3isize).into());
+        expected.insert((5isize, 3isize).into());
+
+        let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
 
         assert_eq!(Some(expected), possible_moves);
     }

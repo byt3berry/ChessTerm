@@ -1,9 +1,9 @@
 use std::collections::HashSet;
+use std::fmt::Debug;
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
 use crate::game::board::move_struct::Move;
-use crate::game::board::pin_kind::PinKind;
 use crate::game::board::position::Position;
 
 use piece_kind::PieceKind;
@@ -16,7 +16,8 @@ pub(crate) mod piece_kind;
 pub(crate) mod queen;
 pub(crate) mod rook;
 
-pub trait Piece {
+pub trait Piece 
+where Self: Debug + Sized {
     fn new(position: Position, color: Color) -> Self;
     fn possible_moves(&self, board: &Board) -> HashSet<Move>;
     fn color(&self) -> Color;
@@ -32,7 +33,7 @@ pub trait Piece {
                 break;
             };
 
-            if let Some(PieceKind::King(pin_king)) = square.piece() {
+            if let Some(PieceKind::King(pin_king)) = square.piece(Color::Any) {
                 if pin_king.color() != self.color() {
                     king_found = true;
                     break;
@@ -41,21 +42,5 @@ pub trait Piece {
         }
 
         king_found
-    }
-
-    fn pinned(&self, board: &Board) -> bool {
-        board
-            .possible_moves(self.color().other())
-            .iter()
-            .filter(|m| m.to() == self.position())
-            .any(|m| m.pin().is_some())
-    }
-
-    fn pinned_but_movable(&self, board: &Board, pin_kind: PinKind) -> bool {
-        board
-            .possible_moves(self.color().other())
-            .iter()
-            .filter(|m| m.to() == self.position())
-            .all(|m| m.pin().is_none_or(|p| p == pin_kind))
     }
 }

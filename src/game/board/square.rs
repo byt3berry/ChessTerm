@@ -1,10 +1,9 @@
-use crate::game::pieces::piece_kind::PieceKind;
+use crate::game::pieces::{piece_kind::PieceKind, Piece};
 
 use super::color::Color;
 
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub(crate) struct Square {
-    color: Color,
     piece: Option<PieceKind>,
 }
 
@@ -21,20 +20,27 @@ impl Square {
         piece
     }
 
-    pub(crate) const fn piece(&self) -> Option<&PieceKind> {
-        self.piece.as_ref()
+    pub(crate) fn piece(&self, color: Color) -> Option<&PieceKind> {
+        if color == Color::Any || self.piece.is_some_and(|piece| piece.color() == color) {
+            return self.piece.as_ref();
+        }
+        
+        None
     }
 
-    pub(super) const fn piece_mut(&mut self) -> Option<&mut PieceKind> {
-        self.piece.as_mut()
+    pub(super) fn piece_mut(&mut self, color: Color) -> Option<&mut PieceKind> {
+        if color == Color::Any || self.piece.is_some_and(|piece| piece.color() == color) {
+            return self.piece.as_mut();
+        }
+        
+        None
     }
 }
 
 #[cfg(test)]
 impl Square {
-    pub(super) const fn new(color: Color, piece: Option<PieceKind>) -> Self {
+    pub(super) const fn new(piece: Option<PieceKind>) -> Self {
         Self {
-            color,
             piece,
         }
     }

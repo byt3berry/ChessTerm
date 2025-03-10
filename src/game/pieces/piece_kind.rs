@@ -22,8 +22,23 @@ pub(crate) enum PieceKind {
     Rook(Rook),
 }
 
-impl PieceKind {
-    pub(crate) fn color(&self) -> Color {
+impl Piece for PieceKind {
+    fn new(_: Position, _: Color) -> Self {
+        panic!("Type \"PieceKind\" can't be instantiated with new");
+    }
+
+    fn possible_moves(&self, board: &Board) -> HashSet<Move> {
+        match self {
+            Self::Bishop(bishop) => bishop.possible_moves(board),
+            Self::King(king) => king.possible_moves(board),
+            Self::Knight(knight) => knight.possible_moves(board),
+            Self::Pawn(pawn) => pawn.possible_moves(board),
+            Self::Queen(queen) => queen.possible_moves(board),
+            Self::Rook(rook) => rook.possible_moves(board),
+        }
+    }
+
+    fn color(&self) -> Color {
         match self {
             Self::Bishop(bishop) => bishop.color(),
             Self::King(king) => king.color(),
@@ -34,7 +49,7 @@ impl PieceKind {
         }
     }
 
-    pub(crate) fn position(&self) -> Position {
+    fn position(&self) -> Position {
         match self {
             Self::Bishop(bishop) => bishop.position(),
             Self::King(king) => king.position(),
@@ -45,7 +60,7 @@ impl PieceKind {
         }
     }
 
-    pub(crate) fn set_position(&mut self, position: Position) {
+    fn set_position(&mut self, position: Position) {
         match self {
             Self::Bishop(bishop) => bishop.set_position(position),
             Self::King(king) => king.set_position(position),
@@ -56,14 +71,14 @@ impl PieceKind {
         }
     }
 
-    pub(crate) fn possible_moves(&self, board: &Board) -> HashSet<Move> {
+    fn find_king(&self, board: &Board, position: Position, offset: (isize, isize)) -> bool {
         match self {
-            Self::Bishop(bishop) => bishop.possible_moves(board),
-            Self::King(king) => king.possible_moves(board),
-            Self::Knight(knight) => knight.possible_moves(board),
-            Self::Pawn(pawn) => pawn.possible_moves(board),
-            Self::Queen(queen) => queen.possible_moves(board),
-            Self::Rook(rook) => rook.possible_moves(board),
+            Self::Bishop(bishop) => bishop.find_king(board, position, offset),
+            Self::King(king) => king.find_king(board, position, offset),
+            Self::Knight(knight) => knight.find_king(board, position, offset),
+            Self::Pawn(pawn) => pawn.find_king(board, position, offset),
+            Self::Queen(queen) => queen.find_king(board, position, offset),
+            Self::Rook(rook) => rook.find_king(board, position, offset),
         }
     }
 }

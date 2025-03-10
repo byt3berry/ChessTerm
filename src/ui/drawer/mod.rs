@@ -1,10 +1,11 @@
 use std::collections::HashSet;
 
+use crate::game::ChessEngine;
 use crate::game::board::color::Color;
 use crate::game::board::position::Position;
 use crate::game::board::square::Square;
 use crate::game::board::{COLUMNS, ROWS};
-use crate::game::ChessEngine;
+use crate::game::pieces::Piece;
 
 use super::cursor::Cursor;
 
@@ -18,10 +19,10 @@ const PIECE_BLACK: u8 = 235u8;
 const PIECE_WHITE: u8 = 240u8;
 const SQUARE_BLACK: u8 = 0u8;
 const SQUARE_WHITE: u8 = 255u8;
-pub const SQUARE_SIZE: usize = 20usize;
+pub(super) const SQUARE_SIZE: usize = 20usize;
 
-const RESET: &str = "\x1b[0m";
 const CLEAN: &str = "\x1b[2J";
+const RESET: &str = "\x1b[0m";
 
 trait Drawable {
     fn drawing(&self) -> [u8; SQUARE_SIZE*SQUARE_SIZE];
@@ -104,11 +105,12 @@ fn square_color(position: Position) -> u8 {
 
 fn piece_color(square: &Square, background_color: u8) -> u8 {
     square
-        .piece()
+        .piece(Color::Any)
         .map_or(background_color, |piece|
             match piece.color() {
                 Color::White => PIECE_WHITE,
                 Color::Black => PIECE_BLACK,
+                Color::Any => panic!("A piece with color \"Any\" can not be drawn")
             })
 }
 
@@ -122,6 +124,6 @@ fn background(color: u8) -> String {
     format!("\u{001b}[48;5;{}m", color)
 }
 
-pub fn clean_screen() {
+pub(crate) fn clean_screen() {
     print!("{CLEAN}");
 }

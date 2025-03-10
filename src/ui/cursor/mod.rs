@@ -11,26 +11,26 @@ use crate::game::ChessEngine;
 
 use super::drawer::SQUARE_SIZE;
 
-pub mod cursor_event;
+pub(crate) mod cursor_event;
 
-pub struct Cursor {
+pub(crate) struct Cursor {
     event: CursorEvent,
     event_iterator: RepeatWith<fn() -> CursorEvent>,
 }
 
 impl Cursor {
-    pub fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
             event: CursorEvent::None,
             event_iterator: Self::event_iter(),
         }
     }
 
-    pub fn event(&self) -> &CursorEvent {
+    pub(crate) fn event(&self) -> &CursorEvent {
         &self.event
     }
 
-    pub fn next_event(&mut self, chess_game: &mut ChessEngine) {
+    pub(crate) fn next_event(&mut self, chess_game: &mut ChessEngine) {
         if let Some(event) = self.event_iterator.next() {
             let current_position: Option<Position> = Self::to_board_position(&self.event);
             let new_position: Option<Position> = Self::to_board_position(&event);
@@ -45,7 +45,7 @@ impl Cursor {
         }
     }
 
-    pub fn selected(&self) -> Option<Position> {
+    pub(crate) fn selected(&self) -> Option<Position> {
         Self::to_board_position(&self.event)
     }
 
@@ -76,7 +76,7 @@ impl Cursor {
         })
     }
 
-    pub fn start() -> Result<()> {
+    pub(crate) fn start() -> Result<()> {
         enable_raw_mode()?;
         execute!(
             std::io::stderr(),
@@ -84,7 +84,7 @@ impl Cursor {
         ).map_err(Error::from)
     }
 
-    pub fn stop() -> Result<()> {
+    pub(crate) fn stop() -> Result<()> {
         execute!(
             std::io::stderr(),
             crossterm::event::DisableMouseCapture,
