@@ -6,7 +6,7 @@ use super::position::Position;
 use super::square::Square;
 use super::{Board, COLUMNS, ROWS};
 
-pub(crate) struct BoardBuilder {
+pub struct BoardBuilder {
     players: [Player; 2],
     board: [Square; ROWS*COLUMNS],
 }

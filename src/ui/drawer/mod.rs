@@ -12,6 +12,7 @@ mod pieces;
 mod square;
 
 const ATTACKED_COLOR: u8 = 42u8;
+const CHECKED_COLOR: u8 = 196u8;
 const CURSOR_COLOR: u8 = 69u8;
 const PIECE_BLACK: u8 = 235u8;
 const PIECE_WHITE: u8 = 240u8;
@@ -27,7 +28,8 @@ trait Drawable {
 }
 
 pub(crate) fn draw_game(chess_game: &ChessEngine, cursor: &Cursor) {
-    let possible_moves: Option<HashSet<Position>> = chess_game.possible_moves(cursor.selected());
+    let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(cursor.selected());
+    let checked_king: Option<Position> = chess_game.checked_king();
     let mut position: Position;
 
     for i in 0..ROWS {
@@ -38,17 +40,19 @@ pub(crate) fn draw_game(chess_game: &ChessEngine, cursor: &Cursor) {
                 panic!("The square ({i}, {j}) should exist");
             };
 
-            draw_square(possible_moves.as_ref(), cursor, square, position);
+            draw_square(possible_moves.as_ref(), checked_king, cursor, square, position);
         }
     }
 }
 
-fn colors(possible_moves: Option<&HashSet<Position>>, cursor: &Cursor, square: &Square, position: Position) -> (u8, u8) {
+fn colors(possible_moves: Option<&HashSet<Position>>, checked_king: Option<Position>, cursor: &Cursor, square: &Square, position: Position) -> (u8, u8) {
     let possible_moves = possible_moves.as_ref();
     let background_color: u8;
 
     if cursor.selected() == Some(position) {
         background_color = CURSOR_COLOR;
+    } else if checked_king == Some(position) {
+        background_color = CHECKED_COLOR;
     } else if possible_moves.as_ref().is_some_and(|moves| moves.contains(&position)) {
         background_color = ATTACKED_COLOR;
     } else {
@@ -59,11 +63,11 @@ fn colors(possible_moves: Option<&HashSet<Position>>, cursor: &Cursor, square: &
     (background_color, piece_color)
 }
 
-fn draw_square(possible_moves: Option<&HashSet<Position>>, cursor: &Cursor, square: &Square, position: Position) {
+fn draw_square(possible_moves: Option<&HashSet<Position>>, checked_king: Option<Position>, cursor: &Cursor, square: &Square, position: Position) {
     let mut output: String = String::new();
     let (row, column): (usize, usize) = (position.row()*SQUARE_SIZE, position.column()*SQUARE_SIZE*2);
     let drawing = square.drawing();
-    let (background_color, piece_color) = colors(possible_moves, cursor, square, position);
+    let (background_color, piece_color) = colors(possible_moves, checked_king, cursor, square, position);
     let background_color: String = background(background_color);
     let piece_color: String = background(piece_color);
 

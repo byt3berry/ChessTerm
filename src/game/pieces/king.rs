@@ -104,8 +104,8 @@ impl Piece for King {
         offset = (0isize, -1isize);
         to = self.position;
 
-        if let Some(PieceKind::Rook(rook)) = board.piece(castle_rook_position) {
-            if rook.color() == self.color && !rook.has_moved() {
+        if let Some(PieceKind::Rook(rook)) = board.piece(castle_rook_position, self.color) {
+            if !rook.has_moved() {
                 loop {
                     to = to + offset;
                     if board.player(self.color.other()).is_attacking(to) {
@@ -131,8 +131,8 @@ impl Piece for King {
         offset = (0isize, 1isize);
         to = self.position;
 
-        if let Some(PieceKind::Rook(rook)) = board.piece(castle_rook_position) {
-            if rook.color() == self.color && !rook.has_moved() {
+        if let Some(PieceKind::Rook(rook)) = board.piece(castle_rook_position, self.color) {
+            if !rook.has_moved() {
                 loop {
                     to = to + offset;
                     if board.player(self.color.other()).is_attacking(to) {
@@ -182,7 +182,7 @@ mod tests {
             .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
-            .piece((3isize, 3isize).into())
+            .piece((3isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((3isize, 3isize).into(), (2isize, 2isize).into(), MoveKind::Attack, None));
@@ -214,9 +214,9 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::White)))
             .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::White)))
             .build();
-        board.set_attacking(Color::White);
+        board.set_possible_moves(Color::White);
         let piece: &PieceKind = board
-            .piece((3isize, 3isize).into())
+            .piece((3isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let expected: HashSet<Move> = HashSet::new();
 
@@ -241,7 +241,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
-            .piece((3isize, 3isize).into())
+            .piece((3isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((3isize, 3isize).into(), (2isize, 2isize).into(), MoveKind::Attack, None));
@@ -278,7 +278,7 @@ mod tests {
             .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
-            .piece((3isize, 3isize).into())
+            .piece((3isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let expected: HashSet<Move> = HashSet::new();
 
@@ -307,7 +307,7 @@ mod tests {
             .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White)))
             .build();
         let piece: &PieceKind = board
-            .piece((3isize, 3isize).into())
+            .piece((3isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((3isize, 3isize).into(), (2isize, 2isize).into(), MoveKind::Attack, None));
@@ -339,7 +339,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
-            .piece((0isize, 4isize).into())
+            .piece((0isize, 4isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((0isize, 4isize).into(), (0isize, 5isize).into(), MoveKind::Attack, None));
@@ -368,7 +368,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
-            .piece((0isize, 4isize).into())
+            .piece((0isize, 4isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((0isize, 4isize).into(), (0isize, 2isize).into(), MoveKind::CastleQueenSide, None));
@@ -398,7 +398,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
-            .piece((0isize, 4isize).into())
+            .piece((0isize, 4isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((0isize, 4isize).into(), (0isize, 3isize).into(), MoveKind::Attack, None));
@@ -430,7 +430,7 @@ mod tests {
             .add(PieceKind::Rook(king_side_rook))
             .build();
         let piece: &PieceKind = board
-            .piece((0isize, 4isize).into())
+            .piece((0isize, 4isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((0isize, 4isize).into(), (0isize, 3isize).into(), MoveKind::Attack, None));
@@ -457,10 +457,10 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
-        board.set_attacking(Color::Black);
-        board.set_attacking(Color::White);
+        board.set_possible_moves(Color::Black);
+        board.set_possible_moves(Color::White);
         let piece: &PieceKind = board
-            .piece((0isize, 4isize).into())
+            .piece((0isize, 4isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((0isize, 4isize).into(), (0isize, 2isize).into(), MoveKind::CastleQueenSide, None));
@@ -491,9 +491,9 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((3isize, 2isize).into(), Color::White)))
             .add(PieceKind::Rook(Rook::new((3isize, 6isize).into(), Color::White)))
             .build();
-        board.set_attacking(Color::White);
+        board.set_possible_moves(Color::White);
         let piece: &PieceKind = board
-            .piece((0isize, 4isize).into())
+            .piece((0isize, 4isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((0isize, 4isize).into(), (0isize, 3isize).into(), MoveKind::Attack, None));

@@ -17,7 +17,7 @@ use crate::game::pieces::piece_kind::PieceKind;
 use crate::game::pieces::queen::Queen;
 use crate::game::pieces::rook::Rook;
 
-pub(super) mod board_builder;
+pub mod board_builder;
 pub(crate) mod color;
 pub(super) mod move_struct;
 pub(super) mod pin_kind;
@@ -108,9 +108,12 @@ impl Board {
         None
     }
 
-    pub(super) fn piece(&self, position: Position) -> Option<&PieceKind> {
+    pub(super) fn piece(&self, position: Position, color: Color) -> Option<&PieceKind> {
         if let Some(square) = self.square(position) {
-            return square.piece()
+            let piece: Option<&PieceKind> = square.piece();
+            if piece.is_some_and(|piece| piece.color() == color) {
+                return piece;
+            }
         }
 
         None
@@ -142,18 +145,18 @@ impl Board {
             .set_piece(piece);
     }
 
-    pub(super) fn set_attacking(&mut self, color: Color) {
-        let mut attacking: HashSet<Move> = HashSet::new();
+    pub(super) fn set_possible_moves(&mut self, color: Color) {
+        let mut possible_moves: HashSet<Move> = HashSet::new();
 
         for index in 0..ROWS*COLUMNS {
             if let Some(piece) = self.piece_from_index(index) {
                 if piece.color() == color {
-                    attacking.extend(piece.possible_moves(self));
+                    possible_moves.extend(piece.possible_moves(self));
                 }
             }
         }
 
-        self.player_mut(color).set_attacking(attacking);
+        self.player_mut(color).set_possible_moves(possible_moves);
     }
 
     fn unset_all_en_passant(&mut self, color: Color) {
@@ -271,14 +274,14 @@ impl Board {
         self.unset_all_en_passant(color.other());
     }
 
-    fn simulate_move(&self, simulated_move: Move, color: Color) -> Self {
+    pub fn simulate_move(&self, simulated_move: &Move, color: Color) -> Self {
         let mut simulated_board: Self = self.clone();
-        simulated_board.make_move(&simulated_move, color);
+        simulated_board.make_move(simulated_move, color);
 
         simulated_board
     }
 
-    fn king(&self, color: Color) -> Option<Position> {
+    pub fn king(&self, color: Color) -> Option<Position> {
         for index in 0..ROWS*COLUMNS {
             if let Some(PieceKind::King(king)) = self.piece_from_index(index) {
                 if king.color() == color {
@@ -290,21 +293,22 @@ impl Board {
         None
     }
 
-    fn checked(&self, color: Color) -> bool {
-        if let Some(position) = self.king(color) {
+    pub fn possible_moves(&self, color: Color) -> &HashSet<Move> {
+        self
+            .player(color)
+            .possible_moves()
+    }
+
+    pub fn checked(&self, color: Color) -> bool {
+        if let Some(king_position) = self.king(color) {
             self
-                .player(color.other())
-                .attacking()
+                .possible_moves(color.other())
                 .iter()
-                .any(|m| m.to() == position)
+                .any(|m| m.to() == king_position)
         } else {
             false
         }
     }
-}
-
-#[cfg(test)]
-impl Board {
 }
 
 #[cfg(test)]
@@ -376,7 +380,7 @@ mod tests {
         let expected_piece: &PieceKind = &PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black));
         let expected: Option<&PieceKind> = Some(expected_piece);
 
-        let piece: Option<&PieceKind> = board.piece((3isize, 3isize).into());
+        let piece: Option<&PieceKind> = board.piece((3isize, 3isize).into(), Color::Black);
 
         assert_eq!(expected, piece);
     }
@@ -400,7 +404,7 @@ mod tests {
         let board: Board = BoardBuilder::new().build();
         let expected: Option<&PieceKind> = None;
 
-        let piece: Option<&PieceKind> = board.piece((10isize, 12isize).into());
+        let piece: Option<&PieceKind> = board.piece((10isize, 12isize).into(), Color::Black);
 
         assert_eq!(expected, piece);
     }
@@ -412,7 +416,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 5isize).into(), Color::Black)))
             .add(PieceKind::Pawn(Pawn::new((1isize, 1isize).into(), Color::White)))
             .build();
-        board.set_attacking(Color::Black);
+        board.set_possible_moves(Color::Black);
         let mut expected: HashSet<Move> = HashSet::new();
         expected.insert(Move::new((3isize, 3isize).into(), (0isize, 3isize).into(), MoveKind::Attack, None));
         expected.insert(Move::new((6isize, 5isize).into(), (5isize, 6isize).into(), MoveKind::Attack, None));
@@ -439,14 +443,14 @@ mod tests {
         expected.insert(Move::new((6isize, 5isize).into(), (7isize, 4isize).into(), MoveKind::Attack, None));
         expected.insert(Move::new((6isize, 5isize).into(), (7isize, 6isize).into(), MoveKind::Attack, None));
 
-        let attacking: &HashSet<Move> = board.player(Color::Black).attacking();
+        let possible_moves: &HashSet<Move> = board.possible_moves(Color::Black);
 
         assert_eq!(
             &expected,
-            attacking,
+            possible_moves,
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
-            expected.difference(&attacking),
-            attacking.difference(&expected),
+            expected.difference(&possible_moves),
+            possible_moves.difference(&expected),
             );
     }
 
@@ -591,7 +595,7 @@ mod tests {
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((5isize, 4isize).into(), Color::White)))
             .build();
-        board.set_attacking(Color::White);
+        board.set_possible_moves(Color::White);
 
         assert!(board.checked(Color::Black));
     }
@@ -602,7 +606,7 @@ mod tests {
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((5isize, 5isize).into(), Color::White)))
             .build();
-        board.set_attacking(Color::White);
+        board.set_possible_moves(Color::White);
 
         assert!(!board.checked(Color::Black));
     }

@@ -16,7 +16,7 @@ pub(crate) mod piece_kind;
 pub(crate) mod queen;
 pub(crate) mod rook;
 
-pub(super) trait Piece {
+pub trait Piece {
     fn new(position: Position, color: Color) -> Self;
     fn possible_moves(&self, board: &Board) -> HashSet<Move>;
     fn color(&self) -> Color;
@@ -45,8 +45,7 @@ pub(super) trait Piece {
 
     fn pinned(&self, board: &Board) -> bool {
         board
-            .player(self.color().other())
-            .attacking()
+            .possible_moves(self.color().other())
             .iter()
             .filter(|m| m.to() == self.position())
             .any(|m| m.pin().is_some())
@@ -54,8 +53,7 @@ pub(super) trait Piece {
 
     fn pinned_but_movable(&self, board: &Board, pin_kind: PinKind) -> bool {
         board
-            .player(self.color().other())
-            .attacking()
+            .possible_moves(self.color().other())
             .iter()
             .filter(|m| m.to() == self.position())
             .all(|m| m.pin().is_none_or(|p| p == pin_kind))
