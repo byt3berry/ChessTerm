@@ -14,14 +14,16 @@ pub(crate) struct Knight {
     position: Position,
 }
 
-impl Piece for Knight {
-    fn new(position: Position, color: Color) -> Self {
+impl Knight {
+    pub fn new(position: Position, color: Color) -> Self {
         Self {
             color,
             position,
         }
     }
+}
 
+impl Piece for Knight {
     fn color(&self) -> Color {
         self.color
     }
@@ -77,7 +79,6 @@ mod tests {
     use crate::game::board::color::Color;
     use crate::game::board::move_kind::MoveKind;
     use crate::game::board::move_struct::Move;
-    use crate::game::pieces::Piece;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;
 

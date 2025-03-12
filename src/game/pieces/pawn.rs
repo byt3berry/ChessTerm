@@ -22,6 +22,15 @@ pub(crate) struct Pawn {
 }
 
 impl Pawn {
+    pub fn new(position: Position, color: Color) -> Self {
+        Self {
+            color,
+            position,
+            en_passant_possible: false,
+            has_moved: false,
+        }
+    }
+
     const fn direction(&self) -> (isize, isize) {
         match self.color {
             Color::White => (-1isize, 0isize),
@@ -45,27 +54,6 @@ impl Pawn {
 
 
 impl Piece for Pawn {
-    fn new(position: Position, color: Color) -> Self {
-        Self {
-            color,
-            position,
-            en_passant_possible: false,
-            has_moved: false,
-        }
-    }
-
-    fn color(&self) -> Color {
-        self.color
-    }
-
-    fn position(&self) -> Position {
-        self.position
-    }
-
-    fn set_position(&mut self, position: Position) {
-        self.position = position;
-    }
-
     fn possible_moves(&self, board: &Board) -> HashSet<Move> {
         const OFFSETS: [(isize, isize); 2] = [
             (0isize, -1isize),
@@ -116,6 +104,18 @@ impl Piece for Pawn {
 
         output
     }
+
+    fn color(&self) -> Color {
+        self.color
+    }
+
+    fn position(&self) -> Position {
+        self.position
+    }
+
+    fn set_position(&mut self, position: Position) {
+        self.position = position;
+    }
 }
 
 #[cfg(test)]
@@ -128,7 +128,6 @@ mod tests {
     use crate::game::board::color::Color;
     use crate::game::board::move_kind::MoveKind;
     use crate::game::board::move_struct::Move;
-    use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::piece_kind::PieceKind;
 

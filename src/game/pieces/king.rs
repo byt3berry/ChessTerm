@@ -17,6 +17,14 @@ pub(crate) struct King {
 }
 
 impl King {
+    pub fn new(position: Position, color: Color) -> Self {
+        Self {
+            color,
+            position,
+            has_moved: false,
+        }
+    }
+
     fn queen_side_castling_final_position(&self) -> Position {
         (self.position.row(), 2usize).into()
     }
@@ -39,14 +47,6 @@ impl King {
 }
 
 impl Piece for King {
-    fn new(position: Position, color: Color) -> Self {
-        Self {
-            color,
-            position,
-            has_moved: false,
-        }
-    }
-
     fn color(&self) -> Color {
         self.color
     }
@@ -164,7 +164,6 @@ mod tests {
     use crate::game::board::color::Color;
     use crate::game::board::move_kind::MoveKind;
     use crate::game::board::move_struct::Move;
-    use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;

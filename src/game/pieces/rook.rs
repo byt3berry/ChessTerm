@@ -16,6 +16,14 @@ pub(crate) struct Rook {
 }
 
 impl Rook {
+    pub fn new(position: Position, color: Color) -> Self {
+        Self {
+            color,
+            position,
+            has_moved: false,
+        }
+    }
+
     pub(super) const fn has_moved(&self) -> bool {
         self.has_moved
     }
@@ -34,14 +42,6 @@ impl Rook {
 }
 
 impl Piece for Rook {
-    fn new(position: Position, color: Color) -> Self {
-        Self {
-            color,
-            position,
-            has_moved: false,
-        }
-    }
-
     fn color(&self) -> Color {
         self.color
     }
@@ -97,7 +97,6 @@ mod tests {
     use crate::game::board::color::Color;
     use crate::game::board::move_kind::MoveKind;
     use crate::game::board::move_struct::Move;
-    use crate::game::pieces::Piece;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;
 

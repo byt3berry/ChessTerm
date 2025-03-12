@@ -8,7 +8,6 @@ use player::Player;
 use position::Position;
 use square::Square;
 
-use crate::game::pieces::Piece; 
 use crate::game::pieces::bishop::Bishop;
 use crate::game::pieces::king::King;
 use crate::game::pieces::knight::Knight;
@@ -285,7 +284,6 @@ mod tests {
     use crate::game::board::move_kind::MoveKind;
     use crate::game::board::move_struct::Move;
     use crate::game::board::square::Square;
-    use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::king::King;
     use crate::game::pieces::pawn::Pawn;

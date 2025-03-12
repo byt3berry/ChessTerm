@@ -1,4 +1,4 @@
-use crate::game::pieces::{piece_kind::PieceKind, Piece};
+use crate::game::pieces::piece_kind::PieceKind;
 
 use super::color::Color;
 

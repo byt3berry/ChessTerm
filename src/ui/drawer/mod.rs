@@ -5,7 +5,6 @@ use crate::game::board::color::Color;
 use crate::game::board::position::Position;
 use crate::game::board::square::Square;
 use crate::game::board::{COLUMNS, ROWS};
-use crate::game::pieces::Piece;
 
 use super::cursor::Cursor;
 

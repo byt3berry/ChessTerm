@@ -5,7 +5,6 @@ use board::color::Color;
 use board::move_struct::Move;
 use board::position::Position;
 use board::square::Square;
-use pieces::Piece;
 
 pub(super) mod pieces;
 pub(super) mod board;
@@ -131,7 +130,6 @@ mod tests {
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
     use crate::game::board::position::Position;
-    use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::king::King;
     use crate::game::pieces::knight::Knight;
