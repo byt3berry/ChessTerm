@@ -32,8 +32,14 @@ impl Cursor {
 
     pub(crate) fn next_event(&mut self, chess_game: &mut ChessEngine) {
         if let Some(event) = self.event_iterator.next() {
-            let current_position: Option<Position> = Self::to_board_position(&self.event);
-            let new_position: Option<Position> = Self::to_board_position(&event);
+            let Some(current_position) = Self::to_board_position(&self.event) else {
+                self.event = CursorEvent::None;
+                return;
+            };
+            let Some(new_position) = Self::to_board_position(&event) else {
+                self.event = CursorEvent::None;
+                return;
+            };
 
             if chess_game.try_move(current_position, new_position) {
                 self.event = CursorEvent::None;
