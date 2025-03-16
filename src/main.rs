@@ -14,13 +14,13 @@ fn main() -> Result<()> {
 
     clean_screen();
     Cursor::start()?;
+    draw_game(&chess_game, &cursor);
 
     loop {
-        draw_game(&chess_game, &cursor);
         cursor.next_event(&mut chess_game);
-        chess_game.set_possible_moves(cursor.selected());
+        draw_game(&chess_game, &cursor);
 
-        if CursorEvent::Stop.eq(cursor.event()){
+        if CursorEvent::Stop.eq(cursor.event()) || chess_game.is_end() {
             break;
         }
     }

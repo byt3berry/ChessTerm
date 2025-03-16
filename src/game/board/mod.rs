@@ -118,6 +118,14 @@ impl Board {
             .set_piece(piece);
     }
 
+    pub fn pieces(&self, color: Color) -> Vec<&PieceKind> {
+        self
+            .board
+            .iter()
+            .filter_map(|square| square.piece(color))
+            .collect()
+    }
+
     pub(super) fn set_possible_moves(&mut self, color: Color) {
         let possible_moves: HashSet<Move> = self
             .board

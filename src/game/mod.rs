@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use board::Board;
 use board::color::Color;
@@ -9,10 +9,19 @@ use board::square::Square;
 pub(super) mod pieces;
 pub(super) mod board;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Result {
+    None,
+    Checkmate,
+    Stalemate,
+    Draw,
+}
+
 pub struct ChessEngine {
     board: Board,
     current_player: Color,
-    possible_moves: Option<HashSet<Move>>,
+    possible_moves: HashMap<Position, HashSet<Move>>,
+    result: Result,
 }
 
 impl ChessEngine {
@@ -22,10 +31,25 @@ impl ChessEngine {
         board.set_possible_moves(starting_player);
         board.set_possible_moves(starting_player.other());
 
-        Self {
+        let mut chess_engine = Self {
             board,
             current_player: starting_player,
-            possible_moves: None,
+            possible_moves: HashMap::new(),
+            result: Result::None,
+        };
+
+        chess_engine.set_possible_moves();
+        chess_engine
+    }
+
+    pub fn result(&self) -> Result {
+        self.result
+    }
+
+    pub fn is_end(&self) -> bool {
+        match self.result {
+            Result::None => false,
+            _ => true,
         }
     }
 
@@ -40,7 +64,7 @@ impl ChessEngine {
         let Some(to) = to else {
             return false;
         };
-        let Some(possible_moves) = self.possible_moves.as_ref() else {
+        let Some(possible_moves) = self.possible_moves.get(&from) else {
             return false;
         };
         let Some(try_move) = possible_moves
@@ -50,10 +74,15 @@ impl ChessEngine {
             };
 
         self.board.make_move(try_move, self.current_player);
+        self.next_turn();
+        true
+    }
+
+    fn next_turn(&mut self) {
         self.board.set_possible_moves(self.current_player);
         self.board.set_possible_moves(self.current_player.other());
         self.current_player = self.current_player.other();
-        true
+        self.set_possible_moves();
     }
 
     pub fn checked_king(&self) -> Option<Position> {
@@ -64,20 +93,25 @@ impl ChessEngine {
         }
     }
 
-    pub fn set_possible_moves(&mut self, position: Option<Position>) {
-        let Some(position) = position else {
-            return;
-        };
+    pub fn set_possible_moves(&mut self) {
+        self.possible_moves = self
+            .board
+            .pieces(self.current_player)
+            .iter()
+            .map(|piece| {
+                let mut possible_moves: HashSet<Move> = piece.possible_moves(&self.board);
+                self.filter_check_block(&mut possible_moves);
+                (piece.position(), possible_moves)
+            })
+            .collect();
 
-        if let Some(piece) = self.board.piece(position, self.current_player) {
-            let mut possible_moves: HashSet<Move> = piece.possible_moves(&self.board);
-            self.filter_check_block(&mut possible_moves);
-            self.possible_moves = Some(possible_moves);
-
-            return;
+        if self.possible_moves.iter().all(|(_, possible_moves)| possible_moves.is_empty()) {
+            if self.board.checked(self.current_player) {
+                self.result = Result::Checkmate;
+            } else {
+                self.result = Result::Stalemate;
+            }
         }
-
-        self.possible_moves = None;
     }
 
     fn filter_check_block(&self, possible_moves: &mut HashSet<Move>) {
@@ -93,7 +127,7 @@ impl ChessEngine {
     }
 
     pub fn possible_positions(&self, position: Option<Position>) -> Option<HashSet<Position>> {
-        let possible_moves: &HashSet<Move> = self.possible_moves.as_ref()?;
+        let possible_moves: &HashSet<Move> = self.possible_moves.get(&position?).as_ref()?;
         let position = position?;
 
         if self.board.piece(position, self.current_player).is_some() {
@@ -116,7 +150,8 @@ impl ChessEngine {
         Self {
             board,
             current_player: starting_player,
-            possible_moves: None,
+            possible_moves: HashMap::new(),
+            result: Result::None,
         }
     }
 }
@@ -137,6 +172,7 @@ mod tests {
     use crate::game::pieces::piece_kind::PieceKind;
     use crate::game::pieces::queen::Queen;
     use crate::game::pieces::rook::Rook;
+    use crate::game::Result;
 
     use super::ChessEngine;
 
@@ -149,9 +185,9 @@ mod tests {
             .add(PieceKind::Queen(Queen::new((4isize, 6isize).into(), Color::Black)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((4isize, 6isize).into()));
+        chess_game.set_possible_moves();
         chess_game.try_move(Some((4isize, 6isize).into()), Some((4isize, 7isize).into()));
-        chess_game.set_possible_moves(Some((6isize, 6isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((5isize, 6isize).into());
 
@@ -168,7 +204,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let expected: HashSet<Position> = HashSet::new();
 
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
@@ -184,7 +220,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((1isize, 1isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((2isize, 2isize).into());
         expected.insert((3isize, 3isize).into());
@@ -207,7 +243,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let expected: HashSet<Position> = HashSet::new();
 
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
@@ -225,7 +261,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::Black)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((2isize, 2isize).into());
         expected.insert((2isize, 3isize).into());
@@ -249,7 +285,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let expected: HashSet<Position> = HashSet::new();
 
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
@@ -265,7 +301,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let expected: HashSet<Position> = HashSet::new();
 
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
@@ -282,7 +318,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((4isize, 3isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let expected: HashSet<Position> = HashSet::new();
 
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
@@ -298,7 +334,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((4isize, 3isize).into());
 
@@ -319,7 +355,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 7isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((4isize, 4isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((5isize, 3isize).into());
 
@@ -336,7 +372,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((1isize, 3isize).into());
         expected.insert((2isize, 3isize).into());
@@ -356,7 +392,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((1isize, 1isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((2isize, 2isize).into());
         expected.insert((3isize, 3isize).into());
@@ -377,7 +413,7 @@ mod tests {
             .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((1isize, 1isize).into()));
+        chess_game.set_possible_moves();
         let expected: HashSet<Position> = HashSet::new();
 
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((1isize, 1isize).into()));
@@ -393,7 +429,7 @@ mod tests {
             .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.set_possible_moves(Some((3isize, 3isize).into()));
+        chess_game.set_possible_moves();
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((1isize, 3isize).into());
         expected.insert((2isize, 3isize).into());
@@ -403,5 +439,37 @@ mod tests {
         let possible_moves: Option<HashSet<Position>> = chess_game.possible_positions(Some((3isize, 3isize).into()));
 
         assert_eq!(Some(expected), possible_moves);
+    }
+
+    #[test]
+    fn test_result_checkmate() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((1isize, 0isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves();
+        let expected: Result = Result::Checkmate;
+
+        let result: Result = chess_game.result;
+
+        assert_eq!(expected, result);
+    }
+
+    #[test]
+    fn test_result_stalemate() {
+        let board: Board = BoardBuilder::new()
+            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .add(PieceKind::King(King::new((2isize, 0isize).into(), Color::White)))
+            .add(PieceKind::Rook(Rook::new((7isize, 1isize).into(), Color::White)))
+            .build();
+        let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
+        chess_game.set_possible_moves();
+        let expected: Result = Result::Stalemate;
+
+        let result: Result = chess_game.result;
+
+        assert_eq!(expected, result);
     }
 }
