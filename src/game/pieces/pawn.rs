@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::hash::{self, Hasher};
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
@@ -52,6 +53,12 @@ impl Pawn {
     }
 }
 
+impl hash::Hash for Pawn {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.color.hash(state);
+        self.position.hash(state);
+    }
+}
 
 impl Piece for Pawn {
     fn possible_moves(&self, board: &Board) -> HashSet<Move> {

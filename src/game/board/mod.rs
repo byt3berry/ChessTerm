@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 
 use board_builder::BoardBuilder;
 use color::Color;
@@ -30,7 +31,7 @@ pub(crate) const COLUMNS: usize = 8;
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub(crate) struct Board {
     players: [Player; 2],
-    board: [Square; ROWS*COLUMNS],
+    squares: [Square; ROWS*COLUMNS],
 }
 
 impl Board {
@@ -72,7 +73,7 @@ impl Board {
     const fn new(players: [Player; 2], board: [Square; ROWS*COLUMNS]) -> Self {
         Self {
             players,
-            board,
+            squares: board,
         }
     }
 
@@ -93,11 +94,11 @@ impl Board {
     }
 
     pub(crate) fn square(&self, position: Position) -> Option<&Square> {
-        self.board.get(position.to_index()?)
+        self.squares.get(position.to_index()?)
     }
 
     fn square_mut(&mut self, position: Position) -> Option<&mut Square> {
-        self.board.get_mut(position.to_index()?)
+        self.squares.get_mut(position.to_index()?)
     }
 
     pub(super) fn piece(&self, position: Position, color: Color) -> Option<&PieceKind> {
@@ -120,7 +121,7 @@ impl Board {
 
     pub fn pieces(&self, color: Color) -> Vec<&PieceKind> {
         self
-            .board
+            .squares
             .iter()
             .filter_map(|square| square.piece(color))
             .collect()
@@ -128,7 +129,7 @@ impl Board {
 
     pub(super) fn set_possible_moves(&mut self, color: Color) {
         let possible_moves: HashSet<Move> = self
-            .board
+            .squares
             .iter()
             .filter_map(|square| square.piece(color))
             .flat_map(|piece| piece.possible_moves(self))
@@ -138,7 +139,7 @@ impl Board {
     }
 
     fn unset_all_en_passant(&mut self, color: Color) {
-        self.board
+        self.squares
             .iter_mut()
             .filter_map(|square| square.piece_mut(color))
             .filter_map(|piece| if let PieceKind::Pawn(pawn) = piece { Some(pawn) } else { None })
@@ -256,7 +257,7 @@ impl Board {
 
     pub fn king(&self, color: Color) -> Option<Position> {
         self
-            .board
+            .squares
             .iter()
             .filter_map(|square| square.piece(color))
             .filter(|piece| matches!(piece, PieceKind::King(_)))
@@ -279,6 +280,12 @@ impl Board {
         } else {
             false
         }
+    }
+}
+
+impl Hash for Board {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.squares.hash(state);
     }
 }
 

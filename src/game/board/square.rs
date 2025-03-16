@@ -2,7 +2,7 @@ use crate::game::pieces::piece_kind::PieceKind;
 
 use super::color::Color;
 
-#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Default, Eq, Hash, PartialEq)]
 pub(crate) struct Square (Option<PieceKind>);
 
 impl Square {

@@ -1,4 +1,5 @@
 use std::collections::HashSet;
+use std::hash::{self, Hasher};
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
@@ -43,6 +44,13 @@ impl King {
 
     pub const fn set_has_moved(&mut self) {
         self.has_moved = true;
+    }
+}
+
+impl hash::Hash for King {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.color.hash(state);
+        self.position.hash(state);
     }
 }
 

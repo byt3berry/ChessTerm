@@ -8,7 +8,7 @@ use crate::game::board::position::Position;
 
 use super::Piece;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) struct Bishop {
     color: Color,
     position: Position

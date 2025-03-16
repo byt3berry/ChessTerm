@@ -9,7 +9,7 @@ use super::pawn::Pawn;
 use super::queen::Queen;
 use super::rook::Rook;
 
-#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub(crate) enum PieceKind {
     Bishop(Bishop),
     King(King),
