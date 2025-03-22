@@ -3,7 +3,7 @@ use crate::game::board::position::Position;
 use super::move_kind::MoveKind;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
-pub(crate) struct Move {
+pub struct Move {
     from: Position,
     to: Position,
     kind: MoveKind,

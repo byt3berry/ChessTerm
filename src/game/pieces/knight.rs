@@ -32,6 +32,10 @@ impl Piece for Knight {
         self.position
     }
 
+    fn points(&self) -> i8 {
+        3i8
+    }
+
     fn set_position(&mut self, position: Position) {
         self.position = position;
     }

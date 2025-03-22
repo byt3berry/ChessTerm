@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::{DefaultHasher, Hash, Hasher};
 
 use board::Board;
@@ -23,7 +23,7 @@ pub struct ChessEngine {
     current_player: Color,
     possible_moves: HashMap<Position, HashSet<Move>>,
     result: Result,
-    moves: Vec<Move>,
+    moves: VecDeque<Move>,
     positions: Vec<u64>,
 }
 
@@ -43,13 +43,30 @@ impl ChessEngine {
             current_player: starting_player,
             possible_moves: HashMap::new(),
             result: Result::None,
-            moves: Vec::new(),
+            moves: VecDeque::new(),
             positions: Vec::new(),
         };
 
         chess_engine.store_hash();
         chess_engine.set_possible_moves();
         chess_engine
+    }
+
+    pub fn current_player(&self) -> Color {
+        self.current_player
+    }
+
+    pub fn points(&self, color: Color) -> i8 {
+        self
+            .board
+            .pieces(color)
+            .iter()
+            .map(|piece| piece.points())
+            .sum()
+    }
+
+    pub fn result(&self) -> Result {
+        self.result
     }
 
     pub fn is_end(&self) -> bool {
@@ -71,7 +88,7 @@ impl ChessEngine {
             };
 
         self.board.make_move(try_move, self.current_player);
-        self.moves.push(try_move.clone());
+        self.moves.push_back(try_move.clone());
         let last_hash: u64 = self.store_hash();
         self.next_turn();
 
@@ -80,6 +97,12 @@ impl ChessEngine {
         }
 
         true
+    }
+
+    pub fn undo_move(&mut self) {
+        self.moves.pop_back();
+        self.positions.pop();
+        self.next_turn();
     }
 
     fn store_hash(&mut self) -> u64 {
@@ -151,6 +174,10 @@ impl ChessEngine {
         }
 
         None
+    }
+
+    pub fn possible_moves(&self) -> &HashMap<Position, HashSet<Move>> {
+        &self.possible_moves
     }
 }
 

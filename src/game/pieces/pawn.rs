@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::hash::{self, Hasher};
+use std::hash::{Hash, Hasher};
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
@@ -53,7 +53,7 @@ impl Pawn {
     }
 }
 
-impl hash::Hash for Pawn {
+impl Hash for Pawn {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.color.hash(state);
         self.position.hash(state);
@@ -61,6 +61,22 @@ impl hash::Hash for Pawn {
 }
 
 impl Piece for Pawn {
+    fn color(&self) -> Color {
+        self.color
+    }
+
+    fn position(&self) -> Position {
+        self.position
+    }
+
+    fn points(&self) -> i8 {
+        1i8
+    }
+
+    fn set_position(&mut self, position: Position) {
+        self.position = position;
+    }
+
     fn possible_moves(&self, board: &Board) -> HashSet<Move> {
         const OFFSETS: [(isize, isize); 2] = [
             (0isize, -1isize),
@@ -110,18 +126,6 @@ impl Piece for Pawn {
         }
 
         output
-    }
-
-    fn color(&self) -> Color {
-        self.color
-    }
-
-    fn position(&self) -> Position {
-        self.position
-    }
-
-    fn set_position(&mut self, position: Position) {
-        self.position = position;
     }
 }
 

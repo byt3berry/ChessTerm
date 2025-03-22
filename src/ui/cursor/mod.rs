@@ -33,11 +33,13 @@ impl Cursor {
     pub(crate) fn next_event(&mut self, chess_game: &mut ChessEngine) {
         if let Some(event) = self.event_iterator.next() {
             let Some(current_position) = Self::to_board_position(&self.event) else {
-                self.event = CursorEvent::None;
+                // self.event = CursorEvent::None;
+                println!("from: {:?}", event);
                 return;
             };
             let Some(new_position) = Self::to_board_position(&event) else {
-                self.event = CursorEvent::None;
+                // self.event = CursorEvent::None;
+                println!("new: {:?}", event);
                 return;
             };
 
@@ -60,6 +62,7 @@ impl Cursor {
         let chess_row: usize = row as usize / SQUARE_SIZE;
         let chess_column: usize = column as usize / SQUARE_SIZE / 2;
         if chess_row > ROWS || chess_column > COLUMNS {
+            println!("to_board {:?}: ({}, {})", cursor_event, chess_row, chess_column);
             return None
         }
 

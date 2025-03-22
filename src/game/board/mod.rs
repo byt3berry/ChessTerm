@@ -19,7 +19,7 @@ use crate::game::pieces::rook::Rook;
 
 pub mod board_builder;
 pub(crate) mod color;
-pub(super) mod move_struct;
+pub(crate) mod move_struct;
 pub(super) mod player;
 pub(crate) mod position;
 pub(crate) mod square;
@@ -227,7 +227,7 @@ impl Board {
                 let rook_final_position: Position = rook.queen_side_castling_final_position();
                 piece_rook.set_position(rook_final_position);
                 self.set_piece(rook_final_position, piece_rook);
-                }
+            }
             MoveKind::EnPassant(attacked_position) => {
                 let mut piece_attacker: PieceKind = self.piece_unset(from);
                 let PieceKind::Pawn(_) = piece_attacker else {
@@ -414,7 +414,7 @@ mod tests {
             "\nelements expected missing: {:?}\nelements not expected: {:?}",
             expected.difference(&possible_moves),
             possible_moves.difference(&expected),
-            );
+        );
     }
 
     #[test]

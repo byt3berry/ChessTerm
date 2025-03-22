@@ -1,5 +1,5 @@
 use std::collections::HashSet;
-use std::hash::{self, Hasher};
+use std::hash::{Hash, Hasher};
 
 use crate::game::board::Board;
 use crate::game::board::color::Color;
@@ -47,7 +47,7 @@ impl King {
     }
 }
 
-impl hash::Hash for King {
+impl Hash for King {
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.color.hash(state);
         self.position.hash(state);
@@ -61,6 +61,10 @@ impl Piece for King {
 
     fn position(&self) -> Position {
         self.position
+    }
+
+    fn points(&self) -> i8 {
+        100i8
     }
 
     fn set_position(&mut self, position: Position) {

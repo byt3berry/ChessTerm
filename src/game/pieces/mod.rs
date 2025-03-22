@@ -14,8 +14,9 @@ pub(crate) mod queen;
 pub(crate) mod rook;
 
 pub trait Piece {
-    fn possible_moves(&self, board: &Board) -> HashSet<Move>;
     fn color(&self) -> Color;
     fn position(&self) -> Position;
+    fn points(&self) -> i8;
     fn set_position(&mut self, position: Position);
+    fn possible_moves(&self, board: &Board) -> HashSet<Move>;
 }
