@@ -10,12 +10,13 @@ impl Square {
         self.0 = Some(piece);
     }
 
-    pub(super) const fn piece_unset(&mut self) -> PieceKind {
-        assert!(self.0.is_some());
+    pub(super) const fn piece_unset(&mut self) -> Option<PieceKind> {
+        if let Some(piece) = self.0 {
+            self.0 = None;
+            return Some(piece);
+        }
 
-        let piece: PieceKind = self.0.unwrap();
-        self.0 = None;
-        piece
+        None
     }
 
     pub(crate) fn piece(&self, color: Color) -> Option<&PieceKind> {

@@ -1,11 +1,13 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::{DefaultHasher, Hash, Hasher};
 
+use board::move_kind::MoveKind;
 use board::Board;
 use board::color::Color;
 use board::move_struct::Move;
 use board::position::Position;
 use board::square::Square;
+use pieces::piece_kind::PieceKind;
 
 pub(super) mod pieces;
 pub(super) mod board;
@@ -18,12 +20,13 @@ pub enum Result {
     Draw,
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct ChessEngine {
     board: Board,
     current_player: Color,
     possible_moves: HashMap<Position, HashSet<Move>>,
     result: Result,
-    moves: VecDeque<Move>,
+    moves: VecDeque<(Move, PieceKind)>,
     positions: Vec<u64>,
 }
 
@@ -77,7 +80,16 @@ impl ChessEngine {
         self.board.square(position)
     }
 
-    pub fn try_move(&mut self, from: Position, to: Position) -> bool {
+    pub fn try_move(&mut self, from: Option<Position>, to: Option<Position>) -> bool {
+        let Some(from) = from else {
+            return false;
+        };
+        let Some(piece_moved) = self.board.piece(from, self.current_player) else {
+            return false;
+        };
+        let Some(to) = to else {
+            return false;
+        };
         let Some(possible_moves) = self.possible_moves.get(&from) else {
             return false;
         };
@@ -87,8 +99,8 @@ impl ChessEngine {
                 return false;
             };
 
+        self.moves.push_back((try_move.clone(), piece_moved.clone()));
         self.board.make_move(try_move, self.current_player);
-        self.moves.push_back(try_move.clone());
         let last_hash: u64 = self.store_hash();
         self.next_turn();
 
@@ -100,8 +112,10 @@ impl ChessEngine {
     }
 
     pub fn undo_move(&mut self) {
-        self.moves.pop_back();
+        let (last_move, last_piece_moved): (Move, PieceKind) = self.moves.pop_back().expect("Can't undo a move if no moves happened");
         self.positions.pop();
+        self.result = Result::None;
+        self.board.undo_move(last_move, last_piece_moved);
         self.next_turn();
     }
 
@@ -216,7 +230,7 @@ mod tests {
             .add(PieceKind::Queen(Queen::new((4isize, 6isize).into(), Color::Black)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.try_move((4isize, 6isize).into(), (4isize, 7isize).into());
+        chess_game.try_move(Some((4isize, 6isize).into()), Some((4isize, 7isize).into()));
         let mut expected: HashSet<Position> = HashSet::new();
         expected.insert((5isize, 6isize).into());
 
@@ -494,14 +508,14 @@ mod tests {
             .add(PieceKind::King(King::new((7isize, 0isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.try_move((0isize, 0isize).into(), (0isize, 1isize).into());
-        chess_game.try_move((7isize, 0isize).into(), (7isize, 1isize).into());
-        chess_game.try_move((0isize, 1isize).into(), (0isize, 0isize).into());
-        chess_game.try_move((7isize, 1isize).into(), (7isize, 0isize).into());
-        chess_game.try_move((0isize, 0isize).into(), (0isize, 1isize).into());
-        chess_game.try_move((7isize, 0isize).into(), (7isize, 1isize).into());
-        chess_game.try_move((0isize, 1isize).into(), (0isize, 0isize).into());
-        chess_game.try_move((7isize, 1isize).into(), (7isize, 0isize).into());
+        chess_game.try_move(Some((0isize, 0isize).into()), Some((0isize, 1isize).into()));
+        chess_game.try_move(Some((7isize, 0isize).into()), Some((7isize, 1isize).into()));
+        chess_game.try_move(Some((0isize, 1isize).into()), Some((0isize, 0isize).into()));
+        chess_game.try_move(Some((7isize, 1isize).into()), Some((7isize, 0isize).into()));
+        chess_game.try_move(Some((0isize, 0isize).into()), Some((0isize, 1isize).into()));
+        chess_game.try_move(Some((7isize, 0isize).into()), Some((7isize, 1isize).into()));
+        chess_game.try_move(Some((0isize, 1isize).into()), Some((0isize, 0isize).into()));
+        chess_game.try_move(Some((7isize, 1isize).into()), Some((7isize, 0isize).into()));
         let expected: Result = Result::Draw;
 
         let result: Result = chess_game.result;
@@ -517,18 +531,18 @@ mod tests {
             .add(PieceKind::King(King::new((7isize, 0isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
-        chess_game.try_move((0isize, 0isize).into(), (0isize, 1isize).into());
-        chess_game.try_move((7isize, 0isize).into(), (7isize, 1isize).into());
-        chess_game.try_move((0isize, 3isize).into(), (0isize, 4isize).into());
-        chess_game.try_move((7isize, 1isize).into(), (7isize, 0isize).into());
-        chess_game.try_move((0isize, 1isize).into(), (0isize, 0isize).into());
-        chess_game.try_move((7isize, 0isize).into(), (7isize, 1isize).into());
-        chess_game.try_move((0isize, 4isize).into(), (0isize, 3isize).into());
-        chess_game.try_move((7isize, 1isize).into(), (7isize, 0isize).into());
-        chess_game.try_move((0isize, 0isize).into(), (0isize, 1isize).into());
-        chess_game.try_move((7isize, 0isize).into(), (7isize, 1isize).into());
-        chess_game.try_move((0isize, 1isize).into(), (0isize, 0isize).into());
-        chess_game.try_move((7isize, 1isize).into(), (7isize, 0isize).into());
+        chess_game.try_move(Some((0isize, 0isize).into()), Some((0isize, 1isize).into()));
+        chess_game.try_move(Some((7isize, 0isize).into()), Some((7isize, 1isize).into()));
+        chess_game.try_move(Some((0isize, 3isize).into()), Some((0isize, 4isize).into()));
+        chess_game.try_move(Some((7isize, 1isize).into()), Some((7isize, 0isize).into()));
+        chess_game.try_move(Some((0isize, 1isize).into()), Some((0isize, 0isize).into()));
+        chess_game.try_move(Some((7isize, 0isize).into()), Some((7isize, 1isize).into()));
+        chess_game.try_move(Some((0isize, 4isize).into()), Some((0isize, 3isize).into()));
+        chess_game.try_move(Some((7isize, 1isize).into()), Some((7isize, 0isize).into()));
+        chess_game.try_move(Some((0isize, 0isize).into()), Some((0isize, 1isize).into()));
+        chess_game.try_move(Some((7isize, 0isize).into()), Some((7isize, 1isize).into()));
+        chess_game.try_move(Some((0isize, 1isize).into()), Some((0isize, 0isize).into()));
+        chess_game.try_move(Some((7isize, 1isize).into()), Some((7isize, 0isize).into()));
         let expected: Result = Result::Draw;
 
         let result: Result = chess_game.result;

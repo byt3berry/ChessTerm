@@ -22,7 +22,7 @@ impl NegaMaxBot {
             return predicted;
         }
 
-        todo!();
+        todo!("no no no ");
     }
 
     fn negamax(&mut self, color_score: i8, depth: i8) -> (i8, Option<(Position, Position)>) {
@@ -41,14 +41,11 @@ impl NegaMaxBot {
             .collect();
 
         for (from, to) in possible_moves {
-            let output = self.chess_game.try_move(from, to);
+            self.chess_game.try_move(Some(from), Some(to));
 
-            println!("depth: {depth}: ({from:?}, {to:?}) ({:?} {:?})", output, self.chess_game.result());
-            match self.chess_game.result() {
-                Result::None => {},
-                Result::Checkmate => return (100 * color_score, Some((from, to))),
-                Result::Stalemate => return (0, Some((from, to))),
-                Result::Draw => return (0, Some((from, to))),
+            println!("depth: {depth}: ({from:?}, {to:?}) ({:?})", self.chess_game.result());
+            if self.chess_game.result() == Result::Checkmate {
+                return (100 * color_score, Some((from, to)));
             }
 
             score = self.negamax(-color_score, depth-1);

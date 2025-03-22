@@ -22,7 +22,7 @@ impl Move {
         }
     }
 
-    pub(super) const fn kind(&self) -> MoveKind {
+    pub(crate) const fn kind(&self) -> MoveKind {
         self.kind
     }
 
@@ -47,7 +47,7 @@ mod tests {
     fn test_move_to_same_square() {
         let from: Position = (3isize, 3isize).into();
         let to: Position = (3isize, 3isize).into();
-        let kind: MoveKind = MoveKind::Attack;
+        let kind: MoveKind = MoveKind::Attack(None);
 
         Move::new(from, to, kind);
     }
@@ -56,7 +56,7 @@ mod tests {
     fn test_move_valid_square() {
         let from: Position = (3isize, 3isize).into();
         let to: Position = (7isize, 4isize).into();
-        let kind: MoveKind = MoveKind::Attack;
+        let kind: MoveKind = MoveKind::Attack(None);
 
         Move::new(from, to, kind);
     }
@@ -66,7 +66,7 @@ mod tests {
     fn test_move_invalid_square() {
         let from: Position = (54isize, 65isize).into();
         let to: Position = (54isize, 66isize).into();
-        let kind: MoveKind = MoveKind::Attack;
+        let kind: MoveKind = MoveKind::Attack(None);
 
         Move::new(from, to, kind);
     }
