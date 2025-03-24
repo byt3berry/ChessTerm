@@ -14,16 +14,14 @@ pub(crate) struct Queen {
     position: Position,
 }
 
-impl Queen {
-    pub fn new(position: Position, color: Color) -> Self {
+impl Piece for Queen {
+    fn new(position: Position, color: Color) -> Self {
         Self {
             color,
             position,
         }
     }
-}
 
-impl Piece for Queen {
     fn color(&self) -> Color {
         self.color
     }
@@ -32,8 +30,8 @@ impl Piece for Queen {
         self.position
     }
 
-    fn points(&self) -> i8 {
-        9i8
+    fn points(&self) -> i16 {
+        9i16
     }
 
     fn set_position(&mut self, position: Position) {
@@ -65,7 +63,7 @@ impl Piece for Queen {
                 };
                 if let Some(piece) = square.piece(Color::Any) {
                     if piece.color() != self.color() {
-                        output.insert(Move::new(self.position, to, MoveKind::Attack(Some(piece.clone()))));
+                        output.insert(Move::new(self.position, to, MoveKind::Attack(Some(*piece))));
                     }
                     break;
                 }
@@ -89,6 +87,7 @@ mod tests {
     use crate::game::board::move_struct::Move;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::Piece;
 
     use super::Queen;
 

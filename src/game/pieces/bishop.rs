@@ -14,16 +14,14 @@ pub(crate) struct Bishop {
     position: Position
 }
 
-impl Bishop {
-    pub fn new(position: Position, color: Color) -> Self {
+impl Piece for Bishop {
+    fn new(position: Position, color: Color) -> Self {
         Self {
             color,
             position,
         }
     }
-}
 
-impl Piece for Bishop {
     fn color(&self) -> Color {
         self.color
     }
@@ -32,8 +30,8 @@ impl Piece for Bishop {
         self.position
     }
 
-    fn points(&self) -> i8 {
-        3i8
+    fn points(&self) -> i16 {
+        3i16
     }
 
     fn set_position(&mut self, position: Position) {
@@ -61,7 +59,7 @@ impl Piece for Bishop {
                 };
                 if let Some(piece) = square.piece(Color::Any) {
                     if piece.color() != self.color() {
-                        output.insert(Move::new(self.position, to, MoveKind::Attack(Some(piece.clone()))));
+                        output.insert(Move::new(self.position, to, MoveKind::Attack(Some(*piece))));
                     }
                     break;
                 }
@@ -85,6 +83,7 @@ mod tests {
     use crate::game::board::move_struct::Move;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::Piece;
 
     use super::Bishop;
 

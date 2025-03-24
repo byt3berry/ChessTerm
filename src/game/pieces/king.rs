@@ -18,12 +18,13 @@ pub(crate) struct King {
 }
 
 impl King {
-    pub fn new(position: Position, color: Color) -> Self {
-        Self {
-            color,
-            position,
-            has_moved: false,
-        }
+    pub const fn has_moved(&self) -> bool {
+        self.has_moved
+    }
+
+    pub fn with_has_moved(mut self) -> Self {
+        self.has_moved = true;
+        self
     }
 
     fn queen_side_castling_final_position(&self) -> Position {
@@ -45,6 +46,14 @@ impl King {
     pub const fn set_has_moved(&mut self) {
         self.has_moved = true;
     }
+
+    pub fn original_position(&self) -> Position {
+        match self.color {
+            Color::White => (7isize, 4isize).into(),
+            Color::Black => (0isize, 4isize).into(),
+            Color::Any => panic!("A king of color \"Any\" has no original position"),
+        }
+    }
 }
 
 impl Hash for King {
@@ -55,6 +64,20 @@ impl Hash for King {
 }
 
 impl Piece for King {
+    fn new(position: Position, color: Color) -> Self {
+        let king: Self = Self {
+            color,
+            position,
+            has_moved: false,
+        };
+
+        if position == king.original_position() {
+            king
+        } else {
+            king.with_has_moved()
+        }
+    }
+
     fn color(&self) -> Color {
         self.color
     }
@@ -63,8 +86,8 @@ impl Piece for King {
         self.position
     }
 
-    fn points(&self) -> i8 {
-        100i8
+    fn points(&self) -> i16 {
+        100i16
     }
 
     fn set_position(&mut self, position: Position) {
@@ -97,7 +120,7 @@ impl Piece for King {
             };
             if let Some(piece) = square.piece(Color::Any) {
                 if piece.color() != self.color() {
-                    output.insert(Move::new(self.position, to, MoveKind::Attack(Some(piece.clone()))));
+                    output.insert(Move::new(self.position, to, MoveKind::Attack(Some(*piece))));
                 }
                 continue;
             }
@@ -105,7 +128,7 @@ impl Piece for King {
             output.insert(Move::new(self.position, to, MoveKind::Attack(None)));
         }
 
-        if self.has_moved {
+        if self.has_moved || self.position != self.original_position() {
             return output;
         }
 
@@ -131,7 +154,7 @@ impl Piece for King {
                     }
 
                     if to == castle_final_position {
-                        output.insert(Move::new(self.position, to, MoveKind::CastleQueenSide(rook.clone())));
+                        output.insert(Move::new(self.position, to, MoveKind::CastleQueenSide(*rook)));
                     }
                 }
             }
@@ -159,7 +182,7 @@ impl Piece for King {
                     }
 
                     if to == castle_final_position {
-                        output.insert(Move::new(self.position, to, MoveKind::CastleKingSide(rook.clone())));
+                        output.insert(Move::new(self.position, to, MoveKind::CastleKingSide(*rook)));
                     }
                 }
             }
@@ -184,6 +207,7 @@ mod tests {
     use crate::game::pieces::piece_kind::PieceKind;
     use crate::game::pieces::queen::Queen;
     use crate::game::pieces::rook::Rook;
+    use crate::game::pieces::Piece;
 
     use super::King;
 
@@ -322,10 +346,8 @@ mod tests {
 
     #[test]
     fn test_castle_king_moved() {
-        let mut king: King = King::new((0isize, 4isize).into(), Color::Black);
-        king.set_has_moved();
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(king))
+            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black).with_has_moved()))
             .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
             .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
@@ -346,14 +368,10 @@ mod tests {
 
     #[test]
     fn test_castle_rook_moved() {
-        let mut queen_side_rook: Rook = Rook::new((0isize, 0isize).into(), Color::Black);
-        let mut king_side_rook: Rook = Rook::new((0isize, 7isize).into(), Color::Black);
-        queen_side_rook.set_has_moved();
-        king_side_rook.set_has_moved();
         let board: Board = BoardBuilder::new()
             .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Rook(queen_side_rook))
-            .add(PieceKind::Rook(king_side_rook))
+            .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black).with_has_moved()))
+            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black).with_has_moved()))
             .build();
         let piece: &PieceKind = board
             .piece((0isize, 4isize).into(), Color::Black)

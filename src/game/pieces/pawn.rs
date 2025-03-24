@@ -23,13 +23,30 @@ pub(crate) struct Pawn {
 }
 
 impl Pawn {
-    pub fn new(position: Position, color: Color) -> Self {
-        Self {
-            color,
-            position,
-            en_passant_possible: false,
-            has_moved: false,
+    pub const fn original_row(&self) -> usize {
+        match self.color {
+            Color::White => 6usize,
+            Color::Black => 1usize,
+            Color::Any => panic!("A pawn of color \"Any\" has no direction"),
         }
+    }
+
+    pub fn en_passant_possible(&self) -> bool {
+        self.en_passant_possible
+    }
+
+    pub fn has_moved(&self) -> bool {
+        self.has_moved
+    }
+
+    pub fn with_has_moved(mut self) -> Self {
+        self.has_moved = true;
+        self
+    }
+
+    pub fn with_en_passant_possible(mut self) -> Self {
+        self.en_passant_possible = true;
+        self.with_has_moved() // If en passant possible, the pawn must have moved
     }
 
     const fn direction(&self) -> (isize, isize) {
@@ -38,10 +55,6 @@ impl Pawn {
             Color::Black => (1isize, 0isize),
             Color::Any => panic!("A pawn of color \"Any\" has no direction"),
         }
-    }
-
-    pub const fn set_en_passant_possible(&mut self) {
-        self.en_passant_possible = true;
     }
 
     pub const fn unset_en_passant_possible(&mut self) {
@@ -61,6 +74,21 @@ impl Hash for Pawn {
 }
 
 impl Piece for Pawn {
+    fn new(position: Position, color: Color) -> Self {
+        let pawn: Self = Self {
+            color,
+            position,
+            en_passant_possible: false,
+            has_moved: false,
+        };
+
+        if position.row() == pawn.original_row() {
+            pawn
+        } else {
+            pawn.with_has_moved()
+        }
+    }
+
     fn color(&self) -> Color {
         self.color
     }
@@ -69,8 +97,8 @@ impl Piece for Pawn {
         self.position
     }
 
-    fn points(&self) -> i8 {
-        1i8
+    fn points(&self) -> i16 {
+        1i16
     }
 
     fn set_position(&mut self, position: Position) {
@@ -106,7 +134,7 @@ impl Piece for Pawn {
 
             to = self.position + new_offset;
             if let Some(piece) = board.piece(to, self.color.other()) {
-                output.insert(Move::new(self.position, to, MoveKind::Attack(Some(piece.clone()))));
+                output.insert(Move::new(self.position, to, MoveKind::Attack(Some(*piece))));
             }
         }
 
@@ -120,7 +148,7 @@ impl Piece for Pawn {
 
             if let Some(pawn) = board.piece(pawn_position, self.color.other()) {
                 if matches!(pawn, PieceKind::Pawn(pawn) if pawn.en_passant_possible) {
-                    output.insert(Move::new(self.position, to, MoveKind::EnPassant(pawn.clone())));
+                    output.insert(Move::new(self.position, to, MoveKind::EnPassant(*pawn)));
                 }
             }
         }
@@ -141,6 +169,7 @@ mod tests {
     use crate::game::board::move_struct::Move;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::Piece;
 
     use super::Pawn;
 
@@ -219,12 +248,8 @@ mod tests {
 
     #[test]
     fn test_en_passant() {
-        let mut pawn_piece_left: Pawn = Pawn::new((4isize, 2isize).into(), Color::White);
-        let mut pawn_piece_right: Pawn = Pawn::new((4isize, 4isize).into(), Color::White);
-        pawn_piece_left.set_en_passant_possible();
-        pawn_piece_right.set_en_passant_possible();
-        let pawn_left: PieceKind = PieceKind::Pawn(pawn_piece_left);
-        let pawn_right: PieceKind = PieceKind::Pawn(pawn_piece_right);
+        let pawn_left: PieceKind = PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::White).with_en_passant_possible());
+        let pawn_right: PieceKind = PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White).with_en_passant_possible());
         let board: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::Black)))
             .add(PieceKind::Bishop(Bishop::new((5isize, 3isize).into(), Color::Black)))
@@ -235,8 +260,8 @@ mod tests {
             .piece((4isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 2isize).into(), MoveKind::EnPassant(pawn_left.clone())));
-        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 4isize).into(), MoveKind::EnPassant(pawn_right.clone())));
+        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 2isize).into(), MoveKind::EnPassant(pawn_left)));
+        expected.insert(Move::new((4isize, 3isize).into(), (5isize, 4isize).into(), MoveKind::EnPassant(pawn_right)));
 
         let possible_moves = piece.possible_moves(&board);
 

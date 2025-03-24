@@ -1,7 +1,6 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::hash::{DefaultHasher, Hash, Hasher};
 
-use board::move_kind::MoveKind;
 use board::Board;
 use board::color::Color;
 use board::move_struct::Move;
@@ -59,7 +58,7 @@ impl ChessEngine {
         self.current_player
     }
 
-    pub fn points(&self, color: Color) -> i8 {
+    pub fn points(&self, color: Color) -> i16 {
         self
             .board
             .pieces(color)
@@ -99,7 +98,7 @@ impl ChessEngine {
                 return false;
             };
 
-        self.moves.push_back((try_move.clone(), piece_moved.clone()));
+        self.moves.push_back((try_move.clone(), *piece_moved));
         self.board.make_move(try_move, self.current_player);
         let last_hash: u64 = self.store_hash();
         self.next_turn();
@@ -217,6 +216,7 @@ mod tests {
     use crate::game::pieces::piece_kind::PieceKind;
     use crate::game::pieces::queen::Queen;
     use crate::game::pieces::rook::Rook;
+    use crate::game::pieces::Piece;
     use crate::game::Result;
 
     use super::ChessEngine;
@@ -380,13 +380,11 @@ mod tests {
 
     #[test]
     fn test_pawn_pinned_can_en_passant() {
-        let mut pawn: Pawn = Pawn::new((4isize, 3isize).into(), Color::White);
-        pawn.set_en_passant_possible();
         let board: Board = BoardBuilder::new()
             .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
             .add(PieceKind::King(King::new((7isize, 1isize).into(), Color::Black)))
             .add(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::White)))
-            .add(PieceKind::Pawn(pawn))
+            .add(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::White).with_en_passant_possible()))
             .add(PieceKind::Bishop(Bishop::new((6isize, 7isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);

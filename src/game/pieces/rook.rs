@@ -17,24 +17,29 @@ pub(crate) struct Rook {
 }
 
 impl Rook {
-    pub fn new(position: Position, color: Color) -> Self {
-        Self {
-            color,
-            position,
-            has_moved: false,
-        }
+    pub fn with_has_moved(mut self) -> Self {
+        self.has_moved = true;
+        self
     }
 
-    pub(super) const fn has_moved(&self) -> bool {
+    pub const fn has_moved(&self) -> bool {
         self.has_moved
     }
 
     pub(crate) fn queen_side_castling_final_position(&self) -> Position {
-        (self.position.row(), 3usize).into()
+        match self.color {
+            Color::White => (7isize, 3isize).into(),
+            Color::Black => (0isize, 3isize).into(),
+            Color::Any => panic!("A king of color \"Any\" has no original position"),
+        }
     }
 
     pub(crate) fn king_side_castling_final_position(&self) -> Position {
-        (self.position.row(), 5usize).into()
+        match self.color {
+            Color::White => (7isize, 5isize).into(),
+            Color::Black => (0isize, 5isize).into(),
+            Color::Any => panic!("A king of color \"Any\" has no original position"),
+        }
     }
 
     pub const fn set_has_moved(&mut self) {
@@ -50,6 +55,14 @@ impl Hash for Rook {
 }
 
 impl Piece for Rook {
+    fn new(position: Position, color: Color) -> Self {
+        Self {
+            color,
+            position,
+            has_moved: false,
+        }
+    }
+
     fn color(&self) -> Color {
         self.color
     }
@@ -58,8 +71,8 @@ impl Piece for Rook {
         self.position
     }
 
-    fn points(&self) -> i8 {
-        5i8
+    fn points(&self) -> i16 {
+        5i16
     }
 
     fn set_position(&mut self, position: Position) {
@@ -87,7 +100,7 @@ impl Piece for Rook {
                 };
                 if let Some(piece) = square.piece(Color::Any) {
                     if piece.color() != self.color() {
-                        output.insert(Move::new(self.position, to, MoveKind::Attack(Some(piece.clone()))));
+                        output.insert(Move::new(self.position, to, MoveKind::Attack(Some(*piece))));
                     }
                     break;
                 }
@@ -111,6 +124,7 @@ mod tests {
     use crate::game::board::move_struct::Move;
     use crate::game::pieces::pawn::Pawn;
     use crate::game::pieces::piece_kind::PieceKind;
+    use crate::game::pieces::Piece;
 
     use super::Rook;
 
@@ -191,10 +205,10 @@ mod tests {
             .piece((3isize, 3isize).into(), Color::Black)
             .expect("The piece should exist");
         let mut expected: HashSet<Move> = HashSet::new();
-        expected.insert(Move::new((3isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::Attack(Some(pawn1).clone())));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 2isize).into(), MoveKind::Attack(Some(pawn2).clone())));
-        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 4isize).into(), MoveKind::Attack(Some(pawn3).clone())));
-        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::Attack(Some(pawn4).clone())));
+        expected.insert(Move::new((3isize, 3isize).into(), (2isize, 3isize).into(), MoveKind::Attack(Some(pawn1))));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 2isize).into(), MoveKind::Attack(Some(pawn2))));
+        expected.insert(Move::new((3isize, 3isize).into(), (3isize, 4isize).into(), MoveKind::Attack(Some(pawn3))));
+        expected.insert(Move::new((3isize, 3isize).into(), (4isize, 3isize).into(), MoveKind::Attack(Some(pawn4))));
 
         let possible_moves: HashSet<Move> = piece.possible_moves(&board);
 
