@@ -19,7 +19,12 @@ impl BoardBuilder {
         }
     }
 
-    pub(crate) fn add(mut self, piece: PieceKind) -> Self {
+    pub(crate) fn with(mut self, piece: PieceKind) -> Self {
+        self.add(piece);
+        self
+    }
+
+    pub(crate) fn add(&mut self, piece: PieceKind) {
         let position: Position = piece.position();
         assert!(position.row() < ROWS, "position {position:?} is invalid");
         assert!(position.column() < COLUMNS, "position {position:?} is invalid");
@@ -27,8 +32,6 @@ impl BoardBuilder {
         if let Some(index) = position.to_index() {
             self.board[index].set_piece(piece);
         }
-
-        self
     }
 
     pub(crate) fn build(self) -> Board {

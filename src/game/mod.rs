@@ -8,8 +8,9 @@ use board::position::Position;
 use board::square::Square;
 use pieces::piece_kind::PieceKind;
 
-pub(super) mod pieces;
+pub mod fen_parser;
 pub(super) mod board;
+pub(super) mod pieces;
 
 #[derive(Clone, Copy, Debug, Hash, PartialEq)]
 pub enum Result {
@@ -136,7 +137,7 @@ impl ChessEngine {
 
     pub fn checked_king(&self) -> Option<Position> {
         if self.board.checked(self.current_player) {
-            self.board.king(self.current_player)
+            self.board.king_position(self.current_player)
         } else {
             None
         }
@@ -205,10 +206,12 @@ mod tests {
     use pretty_assertions::assert_eq;
     use std::collections::HashSet;
 
+    use crate::game::Result;
     use crate::game::board::Board;
     use crate::game::board::board_builder::BoardBuilder;
     use crate::game::board::color::Color;
     use crate::game::board::position::Position;
+    use crate::game::pieces::Piece;
     use crate::game::pieces::bishop::Bishop;
     use crate::game::pieces::king::King;
     use crate::game::pieces::knight::Knight;
@@ -216,18 +219,16 @@ mod tests {
     use crate::game::pieces::piece_kind::PieceKind;
     use crate::game::pieces::queen::Queen;
     use crate::game::pieces::rook::Rook;
-    use crate::game::pieces::Piece;
-    use crate::game::Result;
 
     use super::ChessEngine;
 
     #[test]
     fn test_filter_check_block() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((7isize, 4isize).into(), Color::White)))
-            .add(PieceKind::Pawn(Pawn::new((6isize, 6isize).into(), Color::White)))
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Queen(Queen::new((4isize, 6isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((7isize, 4isize).into(), Color::White)))
+            .with(PieceKind::Pawn(Pawn::new((6isize, 6isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Queen(Queen::new((4isize, 6isize).into(), Color::Black)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         chess_game.try_move(Some((4isize, 6isize).into()), Some((4isize, 7isize).into()));
@@ -242,9 +243,9 @@ mod tests {
     #[test]
     fn test_bishop_pinned_no_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .with(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: HashSet<Position> = HashSet::new();
@@ -257,9 +258,9 @@ mod tests {
     #[test]
     fn test_bishop_pinned_can_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Bishop(Bishop::new((1isize, 1isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .with(PieceKind::Bishop(Bishop::new((1isize, 1isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -277,11 +278,11 @@ mod tests {
     #[test]
     fn test_king_moves_attacked_square_other_color() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((2isize, 0isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((4isize, 0isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((2isize, 0isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((4isize, 0isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: HashSet<Position> = HashSet::new();
@@ -294,11 +295,11 @@ mod tests {
     #[test]
     fn test_king_moves_attacked_square_same_color() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((2isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((4isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((2isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((4isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 4isize).into(), Color::Black)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -319,9 +320,9 @@ mod tests {
     #[test]
     fn test_knight_pinned_no_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .with(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: HashSet<Position> = HashSet::new();
@@ -334,9 +335,9 @@ mod tests {
     #[test]
     fn test_pawn_pinned_no_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .with(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: HashSet<Position> = HashSet::new();
@@ -349,10 +350,10 @@ mod tests {
     #[test]
     fn test_pawn_pinned_no_attack() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((4isize, 3isize).into(), Color::White)))
+            .with(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((4isize, 3isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: HashSet<Position> = HashSet::new();
@@ -365,9 +366,9 @@ mod tests {
     #[test]
     fn test_pawn_pinned_can_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .with(PieceKind::Pawn(Pawn::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -381,11 +382,11 @@ mod tests {
     #[test]
     fn test_pawn_pinned_can_en_passant() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((7isize, 1isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::White)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::White).with_en_passant_possible()))
-            .add(PieceKind::Bishop(Bishop::new((6isize, 7isize).into(), Color::White)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((7isize, 1isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::White)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::White).with_en_passant_possible()))
+            .with(PieceKind::Bishop(Bishop::new((6isize, 7isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -399,9 +400,9 @@ mod tests {
     #[test]
     fn test_queen_pinned_can_move_straight() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Queen(Queen::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .with(PieceKind::Queen(Queen::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -418,9 +419,9 @@ mod tests {
     #[test]
     fn test_queen_pinned_can_move_diagonal() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Queen(Queen::new((1isize, 1isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .with(PieceKind::Queen(Queen::new((1isize, 1isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -438,9 +439,9 @@ mod tests {
     #[test]
     fn test_rook_pinned_no_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Rook(Rook::new((1isize, 1isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((1isize, 1isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((6isize, 6isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: HashSet<Position> = HashSet::new();
@@ -453,9 +454,9 @@ mod tests {
     #[test]
     fn test_rook_pinned_can_move() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Rook(Rook::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((5isize, 3isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let mut expected: HashSet<Position> = HashSet::new();
@@ -472,9 +473,9 @@ mod tests {
     #[test]
     fn test_result_checkmate() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((1isize, 0isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((1isize, 0isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: Result = Result::Checkmate;
@@ -487,9 +488,9 @@ mod tests {
     #[test]
     fn test_result_stalemate() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((2isize, 0isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((7isize, 1isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((2isize, 0isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((7isize, 1isize).into(), Color::White)))
             .build();
         let chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         let expected: Result = Result::Stalemate;
@@ -502,8 +503,8 @@ mod tests {
     #[test]
     fn test_result_draw_repetitions_in_a_row() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((7isize, 0isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((7isize, 0isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         chess_game.try_move(Some((0isize, 0isize).into()), Some((0isize, 1isize).into()));
@@ -524,9 +525,9 @@ mod tests {
     #[test]
     fn test_result_draw_repetitions_separated() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::King(King::new((7isize, 0isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((7isize, 0isize).into(), Color::White)))
             .build();
         let mut chess_game: ChessEngine = ChessEngine::from_board(board, Color::Black);
         chess_game.try_move(Some((0isize, 0isize).into()), Some((0isize, 1isize).into()));

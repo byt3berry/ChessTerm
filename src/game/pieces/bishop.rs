@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn test_simple_moves() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -118,11 +118,11 @@ mod tests {
     #[test]
     fn test_no_moves() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -141,11 +141,11 @@ mod tests {
         let pawn3: PieceKind = PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::White));
         let pawn4: PieceKind = PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White));
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
-            .add(pawn1)
-            .add(pawn2)
-            .add(pawn3)
-            .add(pawn4)
+            .with(PieceKind::Bishop(Bishop::new((3isize, 3isize).into(), Color::Black)))
+            .with(pawn1)
+            .with(pawn2)
+            .with(pawn3)
+            .with(pawn4)
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)

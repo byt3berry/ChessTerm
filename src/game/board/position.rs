@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Sub};
 
 use super::{ROWS, COLUMNS};
 
@@ -18,30 +18,49 @@ impl Position {
     }
 
     pub(crate) fn row(&self) -> usize {
-        assert!(self.row >= 0, "position {self:?} is invalid");
-        assert!(self.row < ROWS as isize, "position {self:?} is invalid");
+        assert!(self.row >= 0, "position {self:?} is invalid (row is negative)");
 
         self.row as usize
     }
 
     pub(crate) fn column(&self) -> usize {
-        assert!(self.column >= 0, "position {self:?} is invalid");
-        assert!(self.column < COLUMNS as isize, "position {self:?} is invalid");
+        assert!(self.column >= 0, "position {self:?} is invalid (column is negative)");
 
         self.column as usize
     }
 
-    pub(super) fn is_valid(&self) -> bool {
+    pub(crate) fn is_valid(&self) -> bool {
         self.row() < ROWS && self.column() < COLUMNS
+    }
+
+    pub fn from_notation(notation: &str) -> Option<Self> {
+        assert_eq!(2, notation.len());
+        let notation: Vec<char> = notation.chars().collect();
+
+        let column: isize = match notation[0] {
+            'a' => 0,
+            'b' => 1,
+            'c' => 2,
+            'd' => 3,
+            'e' => 4,
+            'f' => 5,
+            'g' => 6,
+            'h' => 7,
+            _ => return None,
+        };
+
+        let row: isize = match notation[1] {
+            '1'..='8' => 8 - notation[1].to_digit(10)? as isize,
+            _ => return None,
+        };
+
+        Some((row, column).into())
     }
 }
 
 impl From<(usize, usize)> for Position {
     fn from(value: (usize, usize)) -> Self {
-        Self {
-            row: value.0 as isize,
-            column: value.1 as isize,
-        }
+        (value.0 as isize, value.1 as isize).into()
     }
 }
 
@@ -79,11 +98,42 @@ impl Add<(isize, isize)> for Position {
     }
 }
 
+impl Sub<(isize, isize)> for Position {
+    type Output = Self;
+
+    fn sub(self, value: (isize, isize)) -> Self::Output {
+        (self.row - value.0, self.column - value.1).into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use pretty_assertions::assert_eq;
+    use rstest::rstest;
 
     use super::Position;
+
+    #[rstest]
+    #[case("b1", Some((7isize, 1isize).into()))]
+    #[case("b4", Some((4isize, 1isize).into()))]
+    #[case("c3", Some((5isize, 2isize).into()))]
+    #[case("c8", Some((0isize, 2isize).into()))]
+    #[case("d3", Some((5isize, 3isize).into()))]
+    #[case("d7", Some((1isize, 3isize).into()))]
+    #[case("e4", Some((4isize, 4isize).into()))]
+    #[case("f3", Some((5isize, 5isize).into()))]
+    #[case("h3", Some((5isize, 7isize).into()))]
+    #[case("h4", Some((4isize, 7isize).into()))]
+    fn test_from_notation(
+        #[case]
+        notation: &str,
+        #[case]
+        expected: Option<Position>
+    ) {
+        let position = Position::from_notation(notation);
+
+        assert_eq!(expected, position);
+    }
 
     #[test]
     fn test_position_add_position() {
@@ -107,47 +157,35 @@ mod tests {
         assert_eq!(expected, position3);
     }
 
-    #[test]
-    fn test_position_row_valid() {
-        let position: Position = (2isize, 3isize).into();
-        let expected: usize = 2usize;
-
-        let row: usize = position.row();
-
-        assert_eq!(expected, row);
-    }
-
-    #[test]
+    #[rstest]
+    #[case((-2isize, 3isize).into())]
     #[should_panic]
-    fn test_position_row_invalid_negative() {
-        let position: Position = (-2isize, 3isize).into();
-
+    fn test_position_row_panic(
+        #[case]
+        position: Position
+    ) {
         position.row();
     }
 
-    #[test]
+    #[rstest]
+    #[case((2isize, -3isize).into())]
     #[should_panic]
-    fn test_position_row_invalid_large() {
-        let position: Position = (isize::MAX, 3isize).into();
-
-        position.row();
+    fn test_position_column_panic(
+        #[case]
+        position: Position
+    ) {
+        position.column();
     }
 
-    #[test]
-    fn test_position_index_valid() {
-        let position: Position = (2isize, 3isize).into();
-        let expected: Option<usize> = Some(19usize);
-
-        let index: Option<usize> = position.to_index();
-
-        assert_eq!(expected, index);
-    }
-
-    #[test]
-    fn test_position_index_invalid() {
-        let position: Position = (10isize, 12isize).into();
-        let expected: Option<usize> = None;
-
+    #[rstest]
+    #[case((2isize, 3isize).into(), Some(19usize))]
+    #[case((10isize, 12isize).into(), None)]
+    fn test_position_index(
+        #[case()]
+        position: Position,
+        #[case()]
+        expected: Option<usize>
+        ) {
         let index: Option<usize> = position.to_index();
 
         assert_eq!(expected, index);

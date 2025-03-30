@@ -90,7 +90,7 @@ mod tests {
     #[test]
     fn test_simple_moves() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -113,15 +113,15 @@ mod tests {
     #[test]
     fn test_no_moves() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((1isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 1isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 5isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 1isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 5isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((5isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((1isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((1isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 1isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 5isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 1isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 5isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((5isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -144,15 +144,15 @@ mod tests {
         let pawn7: PieceKind = PieceKind::Pawn(Pawn::new((5isize, 2isize).into(), Color::White));
         let pawn8: PieceKind = PieceKind::Pawn(Pawn::new((5isize, 4isize).into(), Color::White));
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
-            .add(pawn1)
-            .add(pawn2)
-            .add(pawn3)
-            .add(pawn4)
-            .add(pawn5)
-            .add(pawn6)
-            .add(pawn7)
-            .add(pawn8)
+            .with(PieceKind::Knight(Knight::new((3isize, 3isize).into(), Color::Black)))
+            .with(pawn1)
+            .with(pawn2)
+            .with(pawn3)
+            .with(pawn4)
+            .with(pawn5)
+            .with(pawn6)
+            .with(pawn7)
+            .with(pawn8)
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)

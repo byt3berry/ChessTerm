@@ -65,16 +65,10 @@ impl Hash for King {
 
 impl Piece for King {
     fn new(position: Position, color: Color) -> Self {
-        let king: Self = Self {
+        Self {
             color,
             position,
             has_moved: false,
-        };
-
-        if position == king.original_position() {
-            king
-        } else {
-            king.with_has_moved()
         }
     }
 
@@ -214,7 +208,7 @@ mod tests {
     #[test]
     fn test_simple_moves() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -237,15 +231,15 @@ mod tests {
     #[test]
     fn test_no_moves() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((2isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((3isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((3isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((2isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((3isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((3isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 2isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -268,15 +262,15 @@ mod tests {
         let pawn7: PieceKind = PieceKind::Pawn(Pawn::new((4isize, 3isize).into(), Color::White));
         let pawn8: PieceKind = PieceKind::Pawn(Pawn::new((4isize, 4isize).into(), Color::White));
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
-            .add(pawn1)
-            .add(pawn2)
-            .add(pawn3)
-            .add(pawn4)
-            .add(pawn5)
-            .add(pawn6)
-            .add(pawn7)
-            .add(pawn8)
+            .with(PieceKind::King(King::new((3isize, 3isize).into(), Color::Black)))
+            .with(pawn1)
+            .with(pawn2)
+            .with(pawn3)
+            .with(pawn4)
+            .with(pawn5)
+            .with(pawn6)
+            .with(pawn7)
+            .with(pawn8)
             .build();
         let piece: &PieceKind = board
             .piece((3isize, 3isize).into(), Color::Black)
@@ -300,10 +294,10 @@ mod tests {
     fn test_castle_king_side() {
         let rook: PieceKind = PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black));
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Queen(Queen::new((0isize, 3isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
-            .add(rook)
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Queen(Queen::new((0isize, 3isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
+            .with(rook)
             .build();
         let piece: &PieceKind = board
             .piece((0isize, 4isize).into(), Color::Black)
@@ -324,10 +318,10 @@ mod tests {
     fn test_castle_queen_side() {
         let rook: PieceKind = PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black));
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Bishop(Bishop::new((0isize, 5isize).into(), Color::Black)))
-            .add(rook)
-            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Bishop(Bishop::new((0isize, 5isize).into(), Color::Black)))
+            .with(rook)
+            .with(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((0isize, 4isize).into(), Color::Black)
@@ -347,9 +341,9 @@ mod tests {
     #[test]
     fn test_castle_king_moved() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black).with_has_moved()))
-            .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black).with_has_moved()))
+            .with(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
             .build();
         let piece: &PieceKind = board
             .piece((0isize, 4isize).into(), Color::Black)
@@ -369,9 +363,9 @@ mod tests {
     #[test]
     fn test_castle_rook_moved() {
         let board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black).with_has_moved()))
-            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black).with_has_moved()))
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black).with_has_moved()))
+            .with(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black).with_has_moved()))
             .build();
         let piece: &PieceKind = board
             .piece((0isize, 4isize).into(), Color::Black)
@@ -393,9 +387,9 @@ mod tests {
         let rook1: PieceKind = PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black));
         let rook2: PieceKind = PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black));
         let mut board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(rook1)
-            .add(rook2)
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
+            .with(rook1)
+            .with(rook2)
             .build();
         board.set_possible_moves(Color::Black);
         board.set_possible_moves(Color::White);
@@ -419,11 +413,11 @@ mod tests {
     #[test]
     fn test_castle_attacked_other_color() {
         let mut board: Board = BoardBuilder::new()
-            .add(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
-            .add(PieceKind::Rook(Rook::new((3isize, 2isize).into(), Color::White)))
-            .add(PieceKind::Rook(Rook::new((3isize, 6isize).into(), Color::White)))
+            .with(PieceKind::King(King::new((0isize, 4isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 0isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((0isize, 7isize).into(), Color::Black)))
+            .with(PieceKind::Rook(Rook::new((3isize, 2isize).into(), Color::White)))
+            .with(PieceKind::Rook(Rook::new((3isize, 6isize).into(), Color::White)))
             .build();
         board.set_possible_moves(Color::White);
         let piece: &PieceKind = board

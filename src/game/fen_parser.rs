@@ -1,11 +1,9 @@
-use std::str::Chars;
-
 use anyhow::{anyhow, bail, Result};
 
-use crate::game::board::position::Position;
 use crate::game::board::Board;
 use crate::game::board::board_builder::BoardBuilder;
 use crate::game::board::color::Color;
+use crate::game::board::position::Position;
 use crate::game::pieces::Piece;
 use crate::game::pieces::bishop::Bishop;
 use crate::game::pieces::king::King;

@@ -20,4 +20,6 @@ pub trait Piece {
     fn points(&self) -> i16;
     fn set_position(&mut self, position: Position);
     fn possible_moves(&self, board: &Board) -> HashSet<Move>;
+    // fn with_has_moved(self) -> Self where Self : Sized;
+    // fn with_en_passant_possible(self) -> Self where Self : Sized;
 }
